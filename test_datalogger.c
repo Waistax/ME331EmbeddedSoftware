@@ -1,14 +1,13 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.7
+ * Version: 1.8
  *
  * Created on 28.1.2021, 21:44
  */
 
 // L I B R A R I E S
 // ~~~~~~~~~~~~~~~~~
-
 // For SD Card
 #include <SPI.h>
 #include <SD.h>
@@ -30,7 +29,8 @@
 #define STATE_VERTICAL 0
 #define STATE_HORIZONTAL 1
 #define STATE_ANGULAR 2
-#define STATE_DONE 3
+#define STATE_ERROR 3
+#define STATE_DONE 4
 
 // Electronical
 // Left Wheel
@@ -51,16 +51,17 @@
 float rowLength;
 float stepSize;
 float rowWidth;
-unsigned char rowCount;
-unsigned char turnsCW;
+int rowCount;
+int turnsCW;
 
 // State of the robot.
-unsigned char row;
+int row;
 float displacement;
 float sinceMeasurement;
 float angle;
 unsigned char state;
 unsigned char aimedState;
+int blink;
 
 // SD card
 File currentFile;
@@ -131,6 +132,8 @@ float readFloat() {
 
 /** Loads the necessary pins. */
 void setup() {
+	// Set the pin mode for the on-board LED.
+	pinMode(LED_BUILTIN, OUTPUT);
 	// Set the pin modes for the driver connections.
 	pinMode(PIN_DRIVER_AIN1, OUTPUT);
 	pinMode(PIN_DRIVER_AIN2, OUTPUT);
@@ -141,44 +144,36 @@ void setup() {
 	// Set the initial state.
 	state = STATE_VERTICAL;
 	// Set up the SD card.
-	// Initialize the SD library.
-	if (!SD.begin())
-		// Set the state to DONE if the library fails to initialize.
-		state = STATE_DONE;
-	// Open the input file.
-	currentFile = SD.open("input.bin");
-	// If the file could be opened.
-	if (currentFile) {
-		// If there is not enough data given.
-		if (currentFile.available() < 4)
-			// Set the state to DONE.
-			state = STATE_DONE;
-		// Read the input bytes.
-		rowLength = readFloat();
-		stepSize = readFloat();
-		rowWidth = readFloat();
-		rowCount = currentFile.read();
-		turnsCW = readInt();
-		// Close the file.
-		currentFile.close();
-	// If the file could not be opened.
-	} else
+	// Initialize the SD library and read the input file.
+	if (!(SD.begin() && // If the library fails to initialize.
+			currentFile = SD.open("input.bin") && // If the file could not be opened.
+			currentFile.available() < 4 * 5)) { // If there is not enough data given.
 		// Set the state to DONE.
-		state = STATE_DONE;
-	// Open the input file.
-	currentFile = SD.open("output.bin", FILE_WRITE);
-	// If the file could be opened.
-	if (currentFile) {
-		// Write the data given by the user.
-		writeFloat(rowLength);
-		writeFloat(stepSize);
-		writeFloat(rowWidth);
-		currentFile.write(rowCount);
-		writeInt(turnsCW);
-	// If the file could not be opened.
-	} else
-		// Set the state to DONE.
-		state = STATE_DONE;
+		error();
+		return;
+	}
+	// Read the input bytes.
+	rowLength = readFloat();
+	stepSize = readFloat();
+	rowWidth = readFloat();
+	rowCount = readInt();
+	turnsCW = -readInt();
+	// Close the file.
+	currentFile.close();
+	// Open the output file.
+	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
+		// Set the state to DONE if the file could not be opened.
+		error();
+		return;
+	}
+	// Write the data given by the user.
+	writeFloat(rowLength);
+	writeFloat(stepSize);
+	writeFloat(rowWidth);
+	writeInt(rowCount);
+	writeInt(-turnsCW);
+	// Close the file.
+	currentFile.close();
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
@@ -202,7 +197,16 @@ void turn(char cw) {
 
 /** Stores the current temperature to the SD card. */
 void storeTemperature() {
+	// Open the output file.
+	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
+		// Set the state to DONE if the file could not be opened.
+		error();
+		return;
+	}
+	// Write the temperature.
 	writeFloat(temperature());
+	// Close the file.
+	currentFile.close();
 }
 
 // L O G I C
@@ -239,7 +243,8 @@ void verticalStateUpdate() {
 		// If the previous row was the last one.
 		if (++row == rowCount) {
 			// Change the state to done.
-			state = STATE_DONE;
+			itIsDone();
+			return;
 		}
 		// Prepare for the rotation state.
 		aimedState = STATE_HORIZONTAL;
@@ -279,6 +284,22 @@ void angularStateUpdate() {
 	}
 }
 
+/** Changes the state to ERROR and signals the wheels to stop. */
+void error() {
+	state = STATE_ERROR;
+	// Prepare for blinking.
+	blink = HIGH;
+	// Stop the wheels.
+	stop();
+}
+
+/** Changes the state to DONE and signals the wheels to stop. */
+void itIsDone() {
+	state = STATE_DONE;
+	// Stop the wheels.
+	stop();
+}
+
 /** Updates the state of the robot. */
 void loop() {
 	// Wait for 9 milliseconds so the tickrate is around 100Hz.
@@ -294,6 +315,13 @@ void loop() {
 	case STATE_ANGULAR:
 		angularStateUpdate();
 		break;
+	case STATE_ERROR:
+		// Blink the on-board LED.
+		digitalWrite(LED_BUILTIN, blink);
+		if (blink == HIGH)
+			blink = LOW;
+		else
+			blink = HIGH;
 	case STATE_DONE:
 		// If it is done tickrate should be set to around 1Hz so power is not wasted for nothing.
 		delay(990);
