@@ -146,8 +146,8 @@ void setup() {
 	// Set up the SD card.
 	// Initialize the SD library and read the input file.
 	if (!(SD.begin() && // If the library fails to initialize.
-			currentFile = SD.open("input.bin") && // If the file could not be opened.
-			currentFile.available() < 4 * 5)) { // If there is not enough data given.
+			(currentFile = SD.open("input.bin")) && // If the file could not be opened.
+			currentFile.available() == 20)) { // If there is not enough data given.
 		// Set the state to DONE.
 		error();
 		return;
