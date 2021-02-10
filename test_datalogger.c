@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 3.10
+ * Version: 3.11
  *
  * This version test the SD card and the temperature sensor.
  *
@@ -137,7 +137,7 @@ void setup() {
 	turnsCW = -TURN_SIGNAL;
 	// Set up the SD card.
 	// Initialize the SD library.
-	if (SD.begin(4)) {
+	if (SD.begin()) {
 		// Open the output file.
 		currentFile = SD.open("output.bin", FILE_WRITE);
 		// If the file could be opened.
