@@ -35,7 +35,4 @@ void loop() {
 	currentFile.close();
 	digitalWrite(PIN_LED, LOW);
 	delay(1000);
-	File currentFile = SD.open("test.txt", FILE_WRITE);
-	currentFile.write("LED OFF");
-	currentFile.close();
 }
