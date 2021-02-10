@@ -32,6 +32,7 @@ void setup() {
 	SD.begin(PIN_SD_CS);
 	File currentFile = SD.open("test.txt", FILE_WRITE);
 	currentFile.write("Hello World");
+	currentFile.close();
 }
 
 void loop() {
