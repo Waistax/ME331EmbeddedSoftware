@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 3.7
+ * Version: 3.8
  *
  * This version test the SD card and the temperature sensor.
  *
@@ -155,7 +155,7 @@ void setup() {
 	turnsCW = -TURN_SIGNAL;
 	// Set up the SD card.
 	// Initialize the SD library.
-	if (!SD.begin()) {
+	if (!SD.begin(10)) {
 		digitalWrite(PIN_RED, HIGH);
 		// Set the state to DONE if the library fails to initialize.
 		state = STATE_DONE;
