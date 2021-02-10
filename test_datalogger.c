@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 3.8
+ * Version: 3.9
  *
  * This version test the SD card and the temperature sensor.
  *
@@ -155,33 +155,28 @@ void setup() {
 	turnsCW = -TURN_SIGNAL;
 	// Set up the SD card.
 	// Initialize the SD library.
-	if (!SD.begin(10)) {
-		digitalWrite(PIN_RED, HIGH);
-		// Set the state to DONE if the library fails to initialize.
-		state = STATE_DONE;
-	}
-	else {
+	if (SD.begin(10)) {
 		//	// Open the input file.
-		//	currentFile = SD.open("input.bin");
-		//	// If the file could be opened.
-		//	if (currentFile) {
-		//		// If there is not enough data given.
-		//		if (currentFile.available() < 4)
-		//			// Set the state to DONE.
-		//			state = STATE_DONE;
-		//		// Read the input bytes.
-		//		rowLength = readFloat();
-		//		stepSize = readFloat();
-		//		rowWidth = readFloat();
-		//		rowCount = readInt();
-		//		turnsCW = readInt();
-		//		// Close the file.
-		//		currentFile.close();
-		//	// If the file could not be opened.
-		//	} else
-		//		// Set the state to DONE.
-		//		state = STATE_DONE;
-			// Open the output file.
+//	currentFile = SD.open("input.bin");
+//	// If the file could be opened.
+//	if (currentFile) {
+//		// If there is not enough data given.
+//		if (currentFile.available() < 4)
+//			// Set the state to DONE.
+//			state = STATE_DONE;
+//		// Read the input bytes.
+//		rowLength = readFloat();
+//		stepSize = readFloat();
+//		rowWidth = readFloat();
+//		rowCount = readInt();
+//		turnsCW = readInt();
+//		// Close the file.
+//		currentFile.close();
+//	// If the file could not be opened.
+//	} else
+//		// Set the state to DONE.
+//		state = STATE_DONE;
+		// Open the output file.
 		currentFile = SD.open("output.bin", FILE_WRITE);
 		// If the file could be opened.
 		if (currentFile) {
@@ -199,6 +194,11 @@ void setup() {
 			state = STATE_DONE;
 			digitalWrite(PIN_GREEN, HIGH);
 		}
+	}
+	else {
+		digitalWrite(PIN_RED, HIGH);
+		// Set the state to DONE if the library fails to initialize.
+		state = STATE_DONE;
 	}
 }
 
