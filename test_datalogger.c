@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 3.16
+ * Version: 3.17
  *
  * This version test the SD card and the temperature sensor.
  *
@@ -24,13 +24,18 @@ void setup() {
 	File currentFile = SD.open("test.txt", FILE_WRITE);
 	currentFile.write("Hello World");
 	currentFile.close();
-
 	pinMode(PIN_LED, OUTPUT);
 }
 
 void loop() {
 	digitalWrite(PIN_LED, HIGH);
 	delay(1000);
+	File currentFile = SD.open("test.txt", FILE_WRITE);
+	currentFile.write("LED ON");
+	currentFile.close();
 	digitalWrite(PIN_LED, LOW);
 	delay(1000);
+	File currentFile = SD.open("test.txt", FILE_WRITE);
+	currentFile.write("LED OFF");
+	currentFile.close();
 }
