@@ -190,9 +190,9 @@ void setup() {
 			// If the file could not be opened.
 		}
 		else {
+			digitalWrite(PIN_GREEN, HIGH);
 			// Set the state to DONE.
 			state = STATE_DONE;
-			digitalWrite(PIN_GREEN, HIGH);
 		}
 	}
 	else {
