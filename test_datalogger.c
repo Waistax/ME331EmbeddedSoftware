@@ -35,14 +35,13 @@ void setup() {
 	// Initialize the SD library.
 	if (SD.begin(PIN_SD_CS)) {
 		// Open the output file.
-		currentFile = SD.open("output.bin", FILE_WRITE);
+		File currentFile = SD.open("output.bin", FILE_WRITE);
 		// If the file could be opened.
 		if (currentFile) {
 		}
 		else {
 			digitalWrite(PIN_GREEN, HIGH);
 			// Set the state to DONE.
-			state = STATE_DONE;
 		}
 	}
 	else {
