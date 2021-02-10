@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 3.12
+ * Version: 3.13
  *
  * This version test the SD card and the temperature sensor.
  *
@@ -46,7 +46,7 @@
 // Temperature Sensor
 #define PIN_TEMPERATURE_SENSOR A0
 // SD Card Chip Select
-#define PIN_SD_CS 10
+#define PIN_SD_CS 4
 // Debug LEDS
 #define PIN_RED 8
 #define PIN_GREEN 9
