@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 3.6
+ * Version: 3.7
  *
  * This version test the SD card and the temperature sensor.
  *
@@ -155,45 +155,51 @@ void setup() {
 	turnsCW = -TURN_SIGNAL;
 	// Set up the SD card.
 	// Initialize the SD library.
-	if (!SD.begin())
+	if (!SD.begin()) {
+		digitalWrite(PIN_RED, HIGH);
 		// Set the state to DONE if the library fails to initialize.
 		state = STATE_DONE;
-	//	// Open the input file.
-	//	currentFile = SD.open("input.bin");
-	//	// If the file could be opened.
-	//	if (currentFile) {
-	//		// If there is not enough data given.
-	//		if (currentFile.available() < 4)
-	//			// Set the state to DONE.
-	//			state = STATE_DONE;
-	//		// Read the input bytes.
-	//		rowLength = readFloat();
-	//		stepSize = readFloat();
-	//		rowWidth = readFloat();
-	//		rowCount = readInt();
-	//		turnsCW = readInt();
-	//		// Close the file.
-	//		currentFile.close();
-	//	// If the file could not be opened.
-	//	} else
-	//		// Set the state to DONE.
-	//		state = STATE_DONE;
-		// Open the output file.
-	currentFile = SD.open("output.bin", FILE_WRITE);
-	// If the file could be opened.
-	if (currentFile) {
-		// Write the data given by the user.
-		writeFloat(rowLength);
-		writeFloat(stepSize);
-		writeFloat(rowWidth);
-		writeInt(rowCount);
-		writeInt(turnsCW);
-		currentFile.close();
-		// If the file could not be opened.
 	}
-	else
-		// Set the state to DONE.
-		state = STATE_DONE;
+	else {
+		//	// Open the input file.
+		//	currentFile = SD.open("input.bin");
+		//	// If the file could be opened.
+		//	if (currentFile) {
+		//		// If there is not enough data given.
+		//		if (currentFile.available() < 4)
+		//			// Set the state to DONE.
+		//			state = STATE_DONE;
+		//		// Read the input bytes.
+		//		rowLength = readFloat();
+		//		stepSize = readFloat();
+		//		rowWidth = readFloat();
+		//		rowCount = readInt();
+		//		turnsCW = readInt();
+		//		// Close the file.
+		//		currentFile.close();
+		//	// If the file could not be opened.
+		//	} else
+		//		// Set the state to DONE.
+		//		state = STATE_DONE;
+			// Open the output file.
+		currentFile = SD.open("output.bin", FILE_WRITE);
+		// If the file could be opened.
+		if (currentFile) {
+			// Write the data given by the user.
+			writeFloat(rowLength);
+			writeFloat(stepSize);
+			writeFloat(rowWidth);
+			writeInt(rowCount);
+			writeInt(turnsCW);
+			currentFile.close();
+			// If the file could not be opened.
+		}
+		else {
+			// Set the state to DONE.
+			state = STATE_DONE;
+			digitalWrite(PIN_GREEN, HIGH);
+		}
+	}
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
@@ -230,8 +236,6 @@ void storeTemperature() {
 /** Signals for forward movement and records the displacement.
  * The direction of movement is ignored. */
 void forwardMovement() {
-	digitalWrite(PIN_GREEN, HIGH);
-	digitalWrite(PIN_RED, LOW);
 	// Move by a tick.
 	forward();
 	// Record the displacement.
@@ -242,11 +246,6 @@ void forwardMovement() {
 /** Signals for angular movement and records the displacement.
  * The direction of turn is ignored. */
 void angularMovement() {
-	digitalWrite(PIN_RED, HIGH);
-	if (turnsCW < 0)
-		digitalWrite(PIN_GREEN, HIGH);
-	else
-		digitalWrite(PIN_GREEN, LOW);
 	// Turn by a tick.
 	turn(turnsCW);
 	// Record the angle.
@@ -323,8 +322,6 @@ void loop() {
 		break;
 	case STATE_DONE:
 		stop();
-		digitalWrite(PIN_GREEN, LOW);
-		digitalWrite(PIN_RED, LOW);
 		// If it is done tickrate should be set to around 1Hz so power is not wasted for nothing.
 		delay(990);
 		break;
