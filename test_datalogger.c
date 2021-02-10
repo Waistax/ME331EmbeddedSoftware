@@ -76,17 +76,6 @@ File currentFile;
 /** Outputs the signal to the driver that is connected to the given pins.
  * The turn is counter-clockwise if the signal is negative. */
 void driver(int signal, char in1, char in2, char pwm) {
-	// If the signal is negative turns counter-clockwise.
-	if (signal < 0) {
-		digitalWrite(in1, LOW);
-		digitalWrite(in2, HIGH);
-		analogWrite(pwm, -signal);
-	}
-	else {
-		digitalWrite(in1, HIGH);
-		digitalWrite(in2, LOW);
-		analogWrite(pwm, signal);
-	}
 }
 
 /** Signals the wheels to rotate with the given intensity.
@@ -137,13 +126,6 @@ float readFloat() {
 
 /** Loads the necessary pins. */
 void setup() {
-	// Set the pin modes for the driver connections.
-//	pinMode(PIN_DRIVER_AIN1, OUTPUT);
-//	pinMode(PIN_DRIVER_AIN2, OUTPUT);
-//	pinMode(PIN_DRIVER_APWM, OUTPUT);
-//	pinMode(PIN_DRIVER_BIN1, OUTPUT);
-//	pinMode(PIN_DRIVER_BIN2, OUTPUT);
-//	pinMode(PIN_DRIVER_BPWM, OUTPUT);
 	pinMode(PIN_RED, OUTPUT);
 	pinMode(PIN_GREEN, OUTPUT);
 	// Set the initial state.
@@ -156,26 +138,6 @@ void setup() {
 	// Set up the SD card.
 	// Initialize the SD library.
 	if (SD.begin(10)) {
-		//	// Open the input file.
-//	currentFile = SD.open("input.bin");
-//	// If the file could be opened.
-//	if (currentFile) {
-//		// If there is not enough data given.
-//		if (currentFile.available() < 4)
-//			// Set the state to DONE.
-//			state = STATE_DONE;
-//		// Read the input bytes.
-//		rowLength = readFloat();
-//		stepSize = readFloat();
-//		rowWidth = readFloat();
-//		rowCount = readInt();
-//		turnsCW = readInt();
-//		// Close the file.
-//		currentFile.close();
-//	// If the file could not be opened.
-//	} else
-//		// Set the state to DONE.
-//		state = STATE_DONE;
 		// Open the output file.
 		currentFile = SD.open("output.bin", FILE_WRITE);
 		// If the file could be opened.
