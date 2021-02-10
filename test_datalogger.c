@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 3.11
+ * Version: 3.12
  *
  * This version test the SD card and the temperature sensor.
  *
@@ -45,6 +45,8 @@
 #define PIN_DRIVER_BPWM 3
 // Temperature Sensor
 #define PIN_TEMPERATURE_SENSOR A0
+// SD Card Chip Select
+#define PIN_SD_CS 10
 // Debug LEDS
 #define PIN_RED 8
 #define PIN_GREEN 9
@@ -128,6 +130,8 @@ float readFloat() {
 void setup() {
 	pinMode(PIN_RED, OUTPUT);
 	pinMode(PIN_GREEN, OUTPUT);
+	pinMode(PIN_SD_CS, OUTPUT);
+	digitalWrite(PIN_SD_CS, HIGH);
 	// Set the initial state.
 	state = STATE_VERTICAL;
 	rowLength = 100.0F;
@@ -137,7 +141,7 @@ void setup() {
 	turnsCW = -TURN_SIGNAL;
 	// Set up the SD card.
 	// Initialize the SD library.
-	if (SD.begin()) {
+	if (SD.begin(PIN_SD_CS)) {
 		// Open the output file.
 		currentFile = SD.open("output.bin", FILE_WRITE);
 		// If the file could be opened.
