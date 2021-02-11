@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.38
+ * Version: 2.39
  *
  * This version test the driver.
  *
@@ -11,27 +11,29 @@
 // L I B R A R I E S
 // ~~~~~~~~~~~~~~~~~
 
+// For Gyro
+#include <Wire.h>
+#include <MPU6050.h>
+
 // C O N S T A N T S
 // ~~~~~~~~~~~~~~~~~
 
 // Physical
-#define ANGLE_PER_TICK_CCW 0.20F
-#define ANGLE_PER_TICK_CW 0.25F
-#define DISPLACEMENT_PER_TICK 0.001900F
+#define DISPLACEMENT_PER_TICK 0.001900
+#define TICK_MILLIS = 10
 
 // Serial
 #define FORWARD_SIGNAL 0xFF
 #define STOP_SIGNAL 0x0
 #define TURN_SIGNAL 0xFF
-#define ANALOG_TO_CELSIUS 0.488281F
+#define ANALOG_TO_CELSIUS 0.488281
 
 // Logical
 #define STATE_VERTICAL 0
 #define STATE_HORIZONTAL 1
 #define STATE_ANGULAR 2
-#define STATE_STOP 3
-#define STATE_ERROR 4
-#define STATE_DONE 5
+#define STATE_ERROR 3
+#define STATE_DONE 4
 
 // Electronical
 // Left Wheel
@@ -60,8 +62,11 @@ float sinceMeasurement;
 float angle;
 int state;
 int aimedState;
-int continueState;
 int blink;
+
+// Gyro
+MPU6050 mpu;
+float yaw;
 
 // E L E C T R O N I C S   I M P L E M E N T A T I O N
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -103,16 +108,21 @@ void setup() {
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
 	// Set the initial state.
 	state = STATE_VERTICAL;
+	// Initialize gyro
+	if(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G)) {
+		error();
+		return;
+	}
+	// Set the gyro.
+	mpu.calibrateGyro();
+	mpu.setThreshold(3);
 	// Read the input bytes.
-	rowLength = 1.0F;
-	stepSize = 10.0F;
-	rowWidth = 0.1F;
+	rowLength = 1.0;
+	stepSize = 0.1;
+	rowWidth = 0.1;
 	rowCount = 10;
 	turnsCW = -TURN_SIGNAL;
 	delay(10000);
-	wheels(TURN_SIGNAL, -TURN_SIGNAL);
-	delay(10000);
-	itIsDone();
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
@@ -151,23 +161,13 @@ void forwardMovement() {
 	sinceMeasurement += DISPLACEMENT_PER_TICK;
 }
 
-/** Signals for angular movement and records the displacement.
- * The direction of turn is ignored. */
-void angularMovement() {
-	// Turn by a tick.
-	turn(turnsCW);
-	// Record the angle.
-	angle += turnsCW > 0 ? ANGLE_PER_TICK_CW : ANGLE_PER_TICK_CCW;
-}
-
 /** Updates the vertical state. */
 void verticalStateUpdate() {
 	forwardMovement();
 	// Check for the end of the row.
 	if (displacement >= rowLength) {
 		// Change the state to rotation.
-		state = STATE_STOP;
-		continueState = STATE_ANGULAR;
+		state = STATE_ANGULAR;
 		// Revert the turning direction.
 		turnsCW = -turnsCW;
 		// If the previous row was the last one.
@@ -178,14 +178,14 @@ void verticalStateUpdate() {
 		}
 		// Prepare for the rotation state.
 		aimedState = STATE_HORIZONTAL;
-		angle = 0.0F;
-		displacement = 0.0F;
+		angle = yaw;
+		displacement = 0.0;
 	// Check for the measurement spot.
 	} else if (sinceMeasurement >= stepSize) {
 		// Store the temperature.
 		storeTemperature();
 		// Reset the displacement since the last measurement.
-		sinceMeasurement = 0.0F;
+		sinceMeasurement = 0.0;
 	}
 }
 
@@ -195,25 +195,32 @@ void horizontalStateUpdate() {
 	// Check for the start of the row.
 	if (displacement >= rowWidth) {
 		// Change the state to rotation.
-		state = STATE_STOP;
-		continueState = STATE_ANGULAR;
+		state = STATE_ANGULAR;
 		// Prepare for the rotation state.
 		aimedState = STATE_VERTICAL;
-		angle = 0.0F;
-		displacement = 0.0F;
-		sinceMeasurement = 0.0F;
+		angle = yaw;
+		displacement = 0.0;
+		sinceMeasurement = 0.0;
 	}
 }
 
 /** Updates the angular state. */
 void angularStateUpdate() {
-	angularMovement();
+	// Turn by a tick.
+	turn(turnsCW);
 	// Check for the direction.
-	if (angle >= 90.0F) {
+	float difference = angle - yaw;
+	if (difference >= 90.0 || difference <= -90.0)
 		// Change to the next state.
-		state = STATE_STOP;
-		continueState = aimedState;
-	}
+		state = aimedState;
+}
+
+/** Updates the yaw. */
+void gyroUpdate() {
+	// Read normalized values
+	Vector norm = mpu.readNormalizeGyro();
+	// Calculate Pitch, Roll and Yaw
+	yaw = yaw + norm.ZAxis * TICK_MILLIS / 1000.0;
 }
 
 /** Changes the state to ERROR and signals the wheels to stop. */
@@ -234,8 +241,8 @@ void itIsDone() {
 
 /** Updates the state of the robot. */
 void loop() {
-	// Wait for 9 milliseconds so the tickrate is around 100Hz.
-	delay(9);
+	unsigned long timer = millis();
+	gyroUpdate();
 	// Break up the logic into different functions to increase readability.
 	switch (state) {
 	case STATE_VERTICAL:
@@ -247,11 +254,6 @@ void loop() {
 	case STATE_ANGULAR:
 		angularStateUpdate();
 		break;
-	case STATE_STOP:
-		stop();
-		delay(1000);
-		state = continueState;
-		break;
 	case STATE_ERROR:
 		// Blink the on-board LED.
 		digitalWrite(LED_BUILTIN, blink);
@@ -260,8 +262,8 @@ void loop() {
 		else
 			blink = HIGH;
 	case STATE_DONE:
-		// If it is done tickrate should be set to around 1Hz so power is not wasted for nothing.
-		delay(990);
 		break;
 	}
+	// Wait for around 9 milliseconds so the tickrate is around 100Hz.
+	delay(TICK_MILLIS - millis() + timer);
 }
