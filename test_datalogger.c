@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.15
+ * Version: 2.16
  *
  * This version test the driver.
  *
@@ -10,7 +10,6 @@
 
 // L I B R A R I E S
 // ~~~~~~~~~~~~~~~~~
-
 // For SD Card
 #include <SPI.h>
 #include <SD.h>
@@ -32,7 +31,8 @@
 #define STATE_VERTICAL 0
 #define STATE_HORIZONTAL 1
 #define STATE_ANGULAR 2
-#define STATE_DONE 3
+#define STATE_ERROR 3
+#define STATE_DONE 4
 
 // Electronical
 // Left Wheel
@@ -45,9 +45,6 @@
 #define PIN_DRIVER_BPWM 3
 // Temperature Sensor
 #define PIN_TEMPERATURE_SENSOR A0
-// Debug LEDS
-#define PIN_RED 8
-#define PIN_GREEN 9
 
 // F I E L D S
 // ~~~~~~~~~~~
@@ -56,16 +53,17 @@
 float rowLength;
 float stepSize;
 float rowWidth;
-unsigned char rowCount;
+int rowCount;
 int turnsCW;
 
 // State of the robot.
-unsigned char row;
+int row;
 float displacement;
 float sinceMeasurement;
 float angle;
 unsigned char state;
 unsigned char aimedState;
+int blink;
 
 // SD card
 File currentFile;
@@ -99,32 +97,45 @@ void wheels(int left, int right) {
 
 /** Returns the current temperature reading. */
 float temperature() {
-	return 0.0F;
-//	return analogRead(PIN_TEMPERATURE_SENSOR) * ANALOG_TO_CELSIUS;
+	return analogRead(PIN_TEMPERATURE_SENSOR) * ANALOG_TO_CELSIUS;
+}
+
+/** Writes an int to the currently open file. */
+void writeInt(int a) {
+	unsigned int asInt = *((unsigned int*) &a);
+	// Shift the int's bytes to the file.
+	for (int i = 0; i < 4; i++)
+		currentFile.write((asInt >> 8 * a) & 0xFF);
 }
 
 /** Writes a float to the currently open file. */
 void writeFloat(float f) {
-//	// Convert the float to an int.
-//	unsigned int asInt = *((int*) &f);
-//	// Shift the int's bytes to the file.
-//	for (int i = 0; i < 4; i++)
-//		currentFile.write((asInt >> 8 * i) & 0xFF);
+	// Convert the float to an int.
+	writeInt(*((int*) &f));
 }
 
-///** Reads a float from the currently open file. */
-//float readFloat() {
-//	// Create an empty int.
-//	unsigned int asInt = 0;
-//	// Shift the read bytes to the int.
-//	for (int i = 3; i >= 0; i--)
-//		asInt |= currentFile.read() << (8 * i);
-//	// Convert the int to a float.
-//	return *((float*) &asInt);
-//}
+/** Reads an int from the currently open file. */
+int readInt() {
+	// Create an empty int.
+	unsigned int asInt = 0;
+	// Shift the read bytes to the int.
+	for (int i = 3; i >= 0; i--)
+		asInt |= currentFile.read() << (8 * i);
+	return *((int*) &asInt);
+}
+
+/** Reads a float from the currently open file. */
+float readFloat() {
+	// Create an empty int.
+	int asInt = readInt();
+	// Convert the int to a float.
+	return *((float*) &asInt);
+}
 
 /** Loads the necessary pins. */
 void setup() {
+	// Set the pin mode for the on-board LED.
+	pinMode(LED_BUILTIN, OUTPUT);
 	// Set the pin modes for the driver connections.
 	pinMode(PIN_DRIVER_AIN1, OUTPUT);
 	pinMode(PIN_DRIVER_AIN2, OUTPUT);
@@ -132,54 +143,39 @@ void setup() {
 	pinMode(PIN_DRIVER_BIN1, OUTPUT);
 	pinMode(PIN_DRIVER_BIN2, OUTPUT);
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
-	pinMode(PIN_RED, OUTPUT);
-	pinMode(PIN_GREEN, OUTPUT);
 	// Set the initial state.
 	state = STATE_VERTICAL;
-	rowLength = 100.0F;
-	stepSize = 100.0F;
-	rowWidth = 100.0F;
-	rowCount = 10;
-	turnsCW = -TURN_SIGNAL;
-//	// Set up the SD card.
-//	// Initialize the SD library.
-//	if (!SD.begin())
-//		// Set the state to DONE if the library fails to initialize.
-//		state = STATE_DONE;
-//	// Open the input file.
-//	currentFile = SD.open("input.bin");
-//	// If the file could be opened.
-//	if (currentFile) {
-//		// If there is not enough data given.
-//		if (currentFile.available() < 4)
-//			// Set the state to DONE.
-//			state = STATE_DONE;
-//		// Read the input bytes.
-//		rowLength = readFloat();
-//		stepSize = readFloat();
-//		rowWidth = readFloat();
-//		rowCount = currentFile.read();
-//		turnsCW = currentFile.read();
-//		// Close the file.
-//		currentFile.close();
-//	// If the file could not be opened.
-//	} else
-//		// Set the state to DONE.
-//		state = STATE_DONE;
-//	// Open the input file.
-//	currentFile = SD.open("output.bin", FILE_WRITE);
-//	// If the file could be opened.
-//	if (currentFile) {
-//		// Write the data given by the user.
-//		writeFloat(rowLength);
-//		writeFloat(stepSize);
-//		writeFloat(rowWidth);
-//		currentFile.write(rowCount);
-//		currentFile.write(turnsCW);
-//	// If the file could not be opened.
-//	} else
-//		// Set the state to DONE.
-//		state = STATE_DONE;
+	// Set up the SD card.
+	// Initialize the SD library and read the input file.
+	if (!(SD.begin() && // If the library fails to initialize.
+			(currentFile = SD.open("input.bin")) && // If the file could not be opened.
+			currentFile.available() == 20)) { // If there is not enough data given.
+		// Set the state to DONE.
+		error();
+		return;
+	}
+	// Read the input bytes.
+	rowLength = readFloat();
+	stepSize = readFloat();
+	rowWidth = readFloat();
+	rowCount = readInt();
+	turnsCW = -readInt();
+	// Close the file.
+	currentFile.close();
+	// Open the output file.
+	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
+		// Set the state to DONE if the file could not be opened.
+		error();
+		return;
+	}
+	// Write the data given by the user.
+	writeFloat(rowLength);
+	writeFloat(stepSize);
+	writeFloat(rowWidth);
+	writeInt(rowCount);
+	writeInt(-turnsCW);
+	// Close the file.
+	currentFile.close();
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
@@ -197,13 +193,22 @@ void stop() {
 
 /** Sets the signals so the wheels make the robot turn.
  * If the signal given is positive the direction is clockwise. */
-void turn(int cw) {
+void turn(char cw) {
 	wheels(cw, -cw);
 }
 
 /** Stores the current temperature to the SD card. */
 void storeTemperature() {
+	// Open the output file.
+	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
+		// Set the state to DONE if the file could not be opened.
+		error();
+		return;
+	}
+	// Write the temperature.
 	writeFloat(temperature());
+	// Close the file.
+	currentFile.close();
 }
 
 // L O G I C
@@ -212,8 +217,6 @@ void storeTemperature() {
 /** Signals for forward movement and records the displacement.
  * The direction of movement is ignored. */
 void forwardMovement() {
-	digitalWrite(PIN_GREEN, HIGH);
-	digitalWrite(PIN_RED, LOW);
 	// Move by a tick.
 	forward();
 	// Record the displacement.
@@ -224,11 +227,6 @@ void forwardMovement() {
 /** Signals for angular movement and records the displacement.
  * The direction of turn is ignored. */
 void angularMovement() {
-	digitalWrite(PIN_RED, HIGH);
-	if (turnsCW < 0)
-		digitalWrite(PIN_GREEN, HIGH);
-	else
-		digitalWrite(PIN_GREEN, LOW);
 	// Turn by a tick.
 	turn(turnsCW);
 	// Record the angle.
@@ -247,7 +245,8 @@ void verticalStateUpdate() {
 		// If the previous row was the last one.
 		if (++row == rowCount) {
 			// Change the state to done.
-			state = STATE_DONE;
+			itIsDone();
+			return;
 		}
 		// Prepare for the rotation state.
 		aimedState = STATE_HORIZONTAL;
@@ -287,6 +286,22 @@ void angularStateUpdate() {
 	}
 }
 
+/** Changes the state to ERROR and signals the wheels to stop. */
+void error() {
+	state = STATE_ERROR;
+	// Prepare for blinking.
+	blink = HIGH;
+	// Stop the wheels.
+	stop();
+}
+
+/** Changes the state to DONE and signals the wheels to stop. */
+void itIsDone() {
+	state = STATE_DONE;
+	// Stop the wheels.
+	stop();
+}
+
 /** Updates the state of the robot. */
 void loop() {
 	// Wait for 9 milliseconds so the tickrate is around 100Hz.
@@ -302,9 +317,14 @@ void loop() {
 	case STATE_ANGULAR:
 		angularStateUpdate();
 		break;
+	case STATE_ERROR:
+		// Blink the on-board LED.
+		digitalWrite(LED_BUILTIN, blink);
+		if (blink == HIGH)
+			blink = LOW;
+		else
+			blink = HIGH;
 	case STATE_DONE:
-		// Stop
-		stop();
 		// If it is done tickrate should be set to around 1Hz so power is not wasted for nothing.
 		delay(990);
 		break;
