@@ -1,13 +1,14 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.11
+ * Version: 1.12
  *
  * Created on 28.1.2021, 21:44
  */
 
 // Debug
-//#define LOGGING
+//#define READING
+#define LOGGING
 #define MOVEMENT
 
 // L I B R A R I E S
@@ -190,12 +191,20 @@ void setup() {
 		error();
 		return;
 	}
+#ifdef READING
 	// Read the input bytes.
 	rowLength = readFloat();
 	stepSize = readFloat();
 	rowWidth = readFloat();
 	rowCount = readInt();
 	turnsCW = -readInt();
+#else
+	rowLength = 1.0;
+	stepSize = 0.1;
+	rowWidth = 0.1;
+	rowCount = 10;
+	turnsCW = -TURN_SIGNAL;
+#endif
 	// Close the file.
 	currentFile.close();
 	// Open the output file.
@@ -222,6 +231,13 @@ void setup() {
 	
 #ifdef DELAY_AFTER_SETUP
 	delay(1000 * DELAY_AFTER_SETUP);
+#endif
+}
+
+void close() {
+	wheels(STOP_SIGNAL, STOP_SIGNAL);
+#ifdef LOGGING
+	currentFile.close();
 #endif
 }
 
@@ -364,7 +380,7 @@ void error() {
 void itIsDone() {
 	state = STATE_DONE;
 	// Stop the wheels.
-	stop();
+	close();
 }
 
 /** Updates the state of the robot. */
