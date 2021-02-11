@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.19
+ * Version: 2.20
  *
  * This version test the driver.
  *
@@ -74,11 +74,6 @@ void setup() {
 	pinMode(PIN_DRIVER_BIN1, OUTPUT);
 	pinMode(PIN_DRIVER_BIN2, OUTPUT);
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
-	
-	wheels(FORWARD_SIGNAL, -FORWARD_SIGNAL);
-	delay(1000);
-	wheels(-FORWARD_SIGNAL, FORWARD_SIGNAL);
-	delay(1000);
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
@@ -89,4 +84,12 @@ void setup() {
 
 /** Updates the state of the robot. */
 void loop() {
+	wheels(FORWARD_SIGNAL, -FORWARD_SIGNAL);
+	delay(5000);
+	wheels(STOP_SIGNAL, STOP_SIGNAL);
+	delay(3000);
+	wheels(-FORWARD_SIGNAL, FORWARD_SIGNAL);
+	delay(5000);
+	wheels(STOP_SIGNAL, STOP_SIGNAL);
+	delay(3000);
 }
