@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.17
+ * Version: 1.18
  *
  * Created on 28.1.2021, 21:44
  */
@@ -260,6 +260,7 @@ void turn(int cw) {
 /** Stores the current temperature to the SD card. */
 void storeTemperature() {
 #ifdef LOGGING
+	Serial.println("Stop4");
 	// Open the output file.
 	if (!(currentFile = SD.open("output.txt", FILE_WRITE))) {
 		Serial.println("Failed to open the output file!");
@@ -267,10 +268,13 @@ void storeTemperature() {
 		error();
 		return;
 	}
+	Serial.println("Stop5");
 	// Write the temperature.
 	currentFile.println(temperature());
+	Serial.println("Stop6");
 	// Close the file.
 	currentFile.close();
+	Serial.println("Stop7");
 #endif
 }
 
@@ -329,9 +333,12 @@ void verticalStateUpdate() {
 		displacement = 0.0;
 	// Check for the measurement spot.
 	} else if (sinceMeasurement >= stepSize) {
+		Serial.println("Stop1");
 		stop();
 		// Store the temperature.
+		Serial.println("Stop2");
 		storeTemperature();
+		Serial.println("Stop3");
 		// Reset the displacement since the last measurement.
 		sinceMeasurement = 0.0;
 	}
