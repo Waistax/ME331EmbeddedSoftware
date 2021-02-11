@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.14
+ * Version: 1.15
  *
  * Created on 28.1.2021, 21:44
  */
@@ -118,44 +118,6 @@ float temperature() {
 #else
 	return 0.0;
 #endif
-}
-
-/** Writes an int to the currently open file. */
-void writeInt(int a) {
-#ifdef LOGGING
-	unsigned int asInt = *((unsigned int*) &a);
-	// Shift the int's bytes to the file.
-	for (int i = 0; i < 4; i++)
-		currentFile.write((asInt >> 8 * a) & 0xFF);
-#endif
-}
-
-/** Writes a float to the currently open file. */
-void writeFloat(float f) {
-	// Convert the float to an int.
-	writeInt(*((int*) &f));
-}
-
-/** Reads an int from the currently open file. */
-int readInt() {
-#ifdef LOGGING
-	// Create an empty int.
-	unsigned int asInt = 0;
-	// Shift the read bytes to the int.
-	for (int i = 3; i >= 0; i--)
-		asInt |= currentFile.read() << (8 * i);
-	return *((int*) &asInt);
-#else
-	return 0;
-#endif
-}
-
-/** Reads a float from the currently open file. */
-float readFloat() {
-	// Create an empty int.
-	int asInt = readInt();
-	// Convert the int to a float.
-	return *((float*) &asInt);
 }
 
 /** Loads the necessary pins. */
@@ -336,8 +298,10 @@ void verticalStateUpdate() {
 	forwardMovement();
 	// Check for the end of the row.
 	if (displacement >= rowLength) {
+		Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		Serial.print("End of the row ");
 		Serial.println(row + 1);
+		Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		// Change the state to rotation.
 		state = STATE_ANGULAR;
 		// Revert the turning direction.
@@ -350,11 +314,9 @@ void verticalStateUpdate() {
 		}
 		// Prepare for the rotation state.
 		aimedState = STATE_HORIZONTAL;
-		angle = zeroTo2Pi(yaw);
+		angle = yaw;
 		Serial.print("Angle: ");
-		Serial.print(yaw);
-		Serial.print("Zto2Pi: ");
-		Serial.println(zeroTo2Pi(yaw));
+		Serial.print(angle);
 		displacement = 0.0;
 	// Check for the measurement spot.
 	} else if (sinceMeasurement >= stepSize) {
@@ -370,17 +332,17 @@ void horizontalStateUpdate() {
 	forwardMovement();
 	// Check for the start of the row.
 	if (displacement >= rowWidth) {
+		Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		Serial.print("End of changing row ");
 		Serial.println(row);
+		Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		// Change the state to rotation.
 		state = STATE_ANGULAR;
 		// Prepare for the rotation state.
 		aimedState = STATE_VERTICAL;
-		angle = zeroTo2Pi(yaw);
+		angle = yaw;
 		Serial.print("Angle: ");
-		Serial.print(yaw);
-		Serial.print("Zto2Pi: ");
-		Serial.println(zeroTo2Pi(yaw));
+		Serial.print(angle);
 		displacement = 0.0;
 		sinceMeasurement = 0.0;
 	}
@@ -392,10 +354,9 @@ void angularStateUpdate() {
 	turn(turnsCW);
 	Serial.print("Yaw: ");
 	Serial.print(yaw);
-	Serial.print("Zto2Pi: ");
-	Serial.println(zeroTo2Pi(yaw));
-	float difference = absolute(angle - zeroTo2Pi(yaw));
+	float difference = absolute(angle - yaw);
 	Serial.print("Difference: ");
+	Serial.println("______________________");
 	Serial.println(difference);
 	// If the robot turned a right angle.
 	if (difference >= 90.0)
