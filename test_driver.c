@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.31
+ * Version: 2.32
  *
  * This version test the driver.
  *
@@ -57,8 +57,9 @@ int row;
 float displacement;
 float sinceMeasurement;
 float angle;
-unsigned char state;
-unsigned char aimedState;
+int state;
+int aimedState;
+int continueState;
 int blink;
 
 // E L E C T R O N I C S   I M P L E M E N T A T I O N
@@ -66,7 +67,7 @@ int blink;
 
 /** Outputs the signal to the driver that is connected to the given pins.
  * The turn is counter-clockwise if the signal is negative. */
-void driver(int signal, char in1, char in2, char pwm) {
+void driver(int signal, int in1, int in2, int pwm) {
 	// If the signal is negative turns counter-clockwise.
 	if (signal < 0) {
 		digitalWrite(in1, LOW);
@@ -162,6 +163,7 @@ void verticalStateUpdate() {
 	if (displacement >= rowLength) {
 		// Change the state to rotation.
 		state = STATE_STOP;
+		continueState = STATE_ANGULAR;
 		// Revert the turning direction.
 		turnsCW = -turnsCW;
 		// If the previous row was the last one.
@@ -190,6 +192,7 @@ void horizontalStateUpdate() {
 	if (displacement >= rowWidth) {
 		// Change the state to rotation.
 		state = STATE_STOP;
+		continueState = STATE_ANGULAR;
 		// Prepare for the rotation state.
 		aimedState = STATE_VERTICAL;
 		angle = 0.0F;
@@ -205,6 +208,7 @@ void angularStateUpdate() {
 	if (angle >= 90.0F) {
 		// Change to the next state.
 		state = STATE_STOP;
+		continueState = aimedState;
 	}
 }
 
@@ -242,7 +246,7 @@ void loop() {
 	case STATE_STOP:
 		stop();
 		delay(1000);
-		state = aimedState;
+		state = continueState;
 		break;
 	case STATE_ERROR:
 		// Blink the on-board LED.
