@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.22
+ * Version: 2.23
  *
  * This version test the driver.
  *
@@ -18,7 +18,7 @@
 
 // Serial
 #define FORWARD_SIGNAL 0xFF
-#define STOP_SIGNAL 0x0
+#define STOP_SIGNAL 0
 #define TURN_SIGNAL 128
 
 // Logical
@@ -76,7 +76,7 @@ void setup() {
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
 	wheels(TURN_SIGNAL, -TURN_SIGNAL);
 	delay(5000);
-	wheels(TURN_SIGNAL, TURN_SIGNAL);
+	wheels(STOP_SIGNAL, STOP_SIGNAL);
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
