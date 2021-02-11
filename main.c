@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.13
+ * Version: 1.14
  *
  * Created on 28.1.2021, 21:44
  */
@@ -337,7 +337,7 @@ void verticalStateUpdate() {
 	// Check for the end of the row.
 	if (displacement >= rowLength) {
 		Serial.print("End of the row ");
-		Serial.println(row);
+		Serial.println(row + 1);
 		// Change the state to rotation.
 		state = STATE_ANGULAR;
 		// Revert the turning direction.
@@ -351,6 +351,10 @@ void verticalStateUpdate() {
 		// Prepare for the rotation state.
 		aimedState = STATE_HORIZONTAL;
 		angle = zeroTo2Pi(yaw);
+		Serial.print("Angle: ");
+		Serial.print(yaw);
+		Serial.print("Zto2Pi: ");
+		Serial.println(zeroTo2Pi(yaw));
 		displacement = 0.0;
 	// Check for the measurement spot.
 	} else if (sinceMeasurement >= stepSize) {
@@ -373,6 +377,10 @@ void horizontalStateUpdate() {
 		// Prepare for the rotation state.
 		aimedState = STATE_VERTICAL;
 		angle = zeroTo2Pi(yaw);
+		Serial.print("Angle: ");
+		Serial.print(yaw);
+		Serial.print("Zto2Pi: ");
+		Serial.println(zeroTo2Pi(yaw));
 		displacement = 0.0;
 		sinceMeasurement = 0.0;
 	}
@@ -382,6 +390,10 @@ void horizontalStateUpdate() {
 void angularStateUpdate() {
 	// Turn by a tick.
 	turn(turnsCW);
+	Serial.print("Yaw: ");
+	Serial.print(yaw);
+	Serial.print("Zto2Pi: ");
+	Serial.println(zeroTo2Pi(yaw));
 	float difference = absolute(angle - zeroTo2Pi(yaw));
 	Serial.print("Difference: ");
 	Serial.println(difference);
