@@ -1,14 +1,14 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.12
+ * Version: 1.13
  *
  * Created on 28.1.2021, 21:44
  */
 
 // Debug
 //#define READING
-#define LOGGING
+//#define LOGGING
 #define MOVEMENT
 
 // L I B R A R I E S
@@ -160,9 +160,11 @@ float readFloat() {
 
 /** Loads the necessary pins. */
 void setup() {
+	Serial.begin(115200);
 	// Set the pin mode for the on-board LED.
 	pinMode(LED_BUILTIN, OUTPUT);
 #ifdef MOVEMENT
+	Serial.println("Movement active.");
 	// Set the pin modes for the driver connections.
 	pinMode(PIN_DRIVER_AIN1, OUTPUT);
 	pinMode(PIN_DRIVER_AIN2, OUTPUT);
@@ -181,34 +183,52 @@ void setup() {
 #endif
 	// Set the initial state.
 	state = STATE_VERTICAL;
+	// Default
+	rowLength = 1.0;
+	stepSize = 0.1;
+	rowWidth = 0.1;
+	rowCount = 10;
+	turnsCW = -TURN_SIGNAL;
 #ifdef LOGGING
+	Serial.println("Logging active.");
 	// Set up the SD card.
 	// Initialize the SD library and read the input file.
-	if (!(SD.begin() && // If the library fails to initialize.
-			(currentFile = SD.open("input.bin")) && // If the file could not be opened.
-			currentFile.available() == 20)) { // If there is not enough data given.
+	// If the library fails to initialize.
+	if (!SD.begin()) {
+		Serial.println("Failed to initialize SD library!");
 		// Set the state to DONE.
 		error();
 		return;
 	}
+#endif
 #ifdef READING
+	Serial.println("Reading active.");
+	// If there is not enough data given.
+	if (!(currentFile = SD.open("input.bin")) {
+		Serial.println("Failed to open the input.bin file!");
+		// Set the state to DONE.
+		error();
+		return;
+	}
+	if (currentFile.available() != 20) {
+		Serial.println("The input.bin file is not 20 bytes long!");
+		// Set the state to DONE.
+		error();
+		return;
+	}
 	// Read the input bytes.
 	rowLength = readFloat();
 	stepSize = readFloat();
 	rowWidth = readFloat();
 	rowCount = readInt();
 	turnsCW = -readInt();
-#else
-	rowLength = 1.0;
-	stepSize = 0.1;
-	rowWidth = 0.1;
-	rowCount = 10;
-	turnsCW = -TURN_SIGNAL;
-#endif
 	// Close the file.
 	currentFile.close();
+#endif
+#ifdef LOGGING
 	// Open the output file.
 	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
+		Serial.println("Failed to open the output.bin file!");
 		// Set the state to DONE if the file could not be opened.
 		error();
 		return;
@@ -221,20 +241,16 @@ void setup() {
 	writeInt(-turnsCW);
 	// Close the file.
 	currentFile.close();
-#else
-	rowLength = 1.0;
-	stepSize = 0.1;
-	rowWidth = 0.1;
-	rowCount = 10;
-	turnsCW = -TURN_SIGNAL;
 #endif
 	
 #ifdef DELAY_AFTER_SETUP
+	Serial.println("Delaying...");
 	delay(1000 * DELAY_AFTER_SETUP);
 #endif
 }
 
 void close() {
+	Serial.println("Closing...");
 	wheels(STOP_SIGNAL, STOP_SIGNAL);
 #ifdef LOGGING
 	currentFile.close();
@@ -275,6 +291,7 @@ void storeTemperature() {
 #ifdef LOGGING
 	// Open the output file.
 	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
+		Serial.println("Failed to open the output.bin file!");
 		// Set the state to DONE if the file could not be opened.
 		error();
 		return;
@@ -319,6 +336,8 @@ void verticalStateUpdate() {
 	forwardMovement();
 	// Check for the end of the row.
 	if (displacement >= rowLength) {
+		Serial.print("End of the row ");
+		Serial.println(row);
 		// Change the state to rotation.
 		state = STATE_ANGULAR;
 		// Revert the turning direction.
@@ -347,6 +366,8 @@ void horizontalStateUpdate() {
 	forwardMovement();
 	// Check for the start of the row.
 	if (displacement >= rowWidth) {
+		Serial.print("End of changing row ");
+		Serial.println(row);
 		// Change the state to rotation.
 		state = STATE_ANGULAR;
 		// Prepare for the rotation state.
@@ -361,8 +382,11 @@ void horizontalStateUpdate() {
 void angularStateUpdate() {
 	// Turn by a tick.
 	turn(turnsCW);
+	float difference = absolute(angle - zeroTo2Pi(yaw));
+	Serial.print("Difference: ");
+	Serial.println(difference);
 	// If the robot turned a right angle.
-	if (absolute(angle - zeroTo2Pi(yaw)) >= 90.0)
+	if (difference >= 90.0)
 		// Change to the next state.
 		state = aimedState;
 }
