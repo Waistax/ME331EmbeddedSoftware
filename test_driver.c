@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.28
+ * Version: 2.29
  *
  * This version test the driver.
  *
@@ -10,9 +10,6 @@
 
 // L I B R A R I E S
 // ~~~~~~~~~~~~~~~~~
-// For SD Card
-#include <SPI.h>
-#include <SD.h>
 
 // C O N S T A N T S
 // ~~~~~~~~~~~~~~~~~
@@ -127,7 +124,7 @@ void stop() {
 
 /** Sets the signals so the wheels make the robot turn.
  * If the signal given is positive the direction is clockwise. */
-void turn(char cw) {
+void turn(int cw) {
 	wheels(cw, -cw);
 }
 
