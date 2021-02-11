@@ -15,8 +15,6 @@
 // ~~~~~~~~~~~~~~~~~
 
 // Physical
-#define ANGLE_PER_TICK 0.1F
-#define DISPLACEMENT_PER_TICK 1.0F
 
 // Serial
 #define FORWARD_SIGNAL 0xFF
@@ -24,11 +22,6 @@
 #define TURN_SIGNAL 0xFF
 
 // Logical
-#define STATE_VERTICAL 0
-#define STATE_HORIZONTAL 1
-#define STATE_ANGULAR 2
-#define STATE_ERROR 3
-#define STATE_DONE 4
 
 // Electronical
 // Left Wheel
