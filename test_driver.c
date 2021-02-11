@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.34
+ * Version: 2.35
  *
  * This version test the driver.
  *
@@ -15,7 +15,8 @@
 // ~~~~~~~~~~~~~~~~~
 
 // Physical
-#define ANGLE_PER_TICK 0.419753F
+#define ANGLE_PER_TICK_CCW 0.419753F
+#define ANGLE_PER_TICK_CW 0.335802F
 #define DISPLACEMENT_PER_TICK 0.001900F
 
 // Serial
@@ -153,7 +154,7 @@ void angularMovement() {
 	// Turn by a tick.
 	turn(turnsCW);
 	// Record the angle.
-	angle += ANGLE_PER_TICK;
+	angle += turnsCW > 0 ? ANGLE_PER_TICK_CW : ANGLE_PER_TICK_CCW;
 }
 
 /** Updates the vertical state. */
