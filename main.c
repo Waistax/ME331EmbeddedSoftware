@@ -420,8 +420,8 @@ void loop() {
 		break;
 	}
 	// Wait for the correct tick rate.
-	unsigned long millis = millis() - timer;
-	if (millis >= TICK_MILLIS)
+	unsigned long elapsedTime = millis() - timer;
+	if (elapsedTime >= TICK_MILLIS)
 		Serial.println("We are behind the clock!");
-	delay(TICK_MILLIS - millis);
+	delay(TICK_MILLIS - elapsedTime);
 }
