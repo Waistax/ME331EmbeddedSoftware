@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.37
+ * Version: 2.38
  *
  * This version test the driver.
  *
@@ -110,6 +110,9 @@ void setup() {
 	rowCount = 10;
 	turnsCW = -TURN_SIGNAL;
 	delay(10000);
+	wheels(TURN_SIGNAL, -TURN_SIGNAL);
+	delay(10000);
+	itIsDone();
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
