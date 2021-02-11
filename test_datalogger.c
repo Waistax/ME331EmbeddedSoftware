@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.16
+ * Version: 2.17
  *
  * This version test the driver.
  *
@@ -10,22 +10,18 @@
 
 // L I B R A R I E S
 // ~~~~~~~~~~~~~~~~~
-// For SD Card
-#include <SPI.h>
-#include <SD.h>
 
 // C O N S T A N T S
 // ~~~~~~~~~~~~~~~~~
 
 // Physical
-#define ANGLE_PER_TICK 1.0F
+#define ANGLE_PER_TICK 0.1F
 #define DISPLACEMENT_PER_TICK 1.0F
 
 // Serial
 #define FORWARD_SIGNAL 0xFF
 #define STOP_SIGNAL 0x0
 #define TURN_SIGNAL 0xFF
-#define ANALOG_TO_CELSIUS 0.48828125F
 
 // Logical
 #define STATE_VERTICAL 0
