@@ -1,14 +1,14 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.15
+ * Version: 1.16
  *
  * Created on 28.1.2021, 21:44
  */
 
 // Debug
 //#define READING
-//#define LOGGING
+#define LOGGING
 #define MOVEMENT
 
 // L I B R A R I E S
@@ -189,18 +189,23 @@ void setup() {
 #endif
 #ifdef LOGGING
 	// Open the output file.
-	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
-		Serial.println("Failed to open the output.bin file!");
+	if (!(currentFile = SD.open("output.txt", FILE_WRITE))) {
+		Serial.println("Failed to open the output file!");
 		// Set the state to DONE if the file could not be opened.
 		error();
 		return;
 	}
 	// Write the data given by the user.
-//	writeFloat(rowLength);
-//	writeFloat(stepSize);
-//	writeFloat(rowWidth);
-//	writeInt(rowCount);
-//	writeInt(-turnsCW);
+	currentFile.print("Row Length: ");
+	currentFile.println(rowLength);
+	currentFile.print("Step Size: ");
+	currentFile.println(stepSize);
+	currentFile.print("Row Width: ");
+	currentFile.println(rowWidth);
+	currentFile.print("Row Count: ");
+	currentFile.println(rowCount);
+	currentFile.print("Turns CW: ");
+	currentFile.println(-turnsCW);
 	// Close the file.
 	currentFile.close();
 #endif
@@ -252,14 +257,14 @@ void turn(int cw) {
 void storeTemperature() {
 #ifdef LOGGING
 	// Open the output file.
-	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
-		Serial.println("Failed to open the output.bin file!");
+	if (!(currentFile = SD.open("output.txt", FILE_WRITE))) {
+		Serial.println("Failed to open the output file!");
 		// Set the state to DONE if the file could not be opened.
 		error();
 		return;
 	}
 	// Write the temperature.
-	writeFloat(temperature());
+	currentFile.println(temperature());
 	// Close the file.
 	currentFile.close();
 #endif
