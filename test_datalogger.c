@@ -43,8 +43,6 @@
 #define PIN_DRIVER_BIN1 2
 #define PIN_DRIVER_BIN2 4
 #define PIN_DRIVER_BPWM 3
-// Temperature Sensor
-#define PIN_TEMPERATURE_SENSOR A0
 
 // F I E L D S
 // ~~~~~~~~~~~
@@ -64,9 +62,6 @@ float angle;
 unsigned char state;
 unsigned char aimedState;
 int blink;
-
-// SD card
-File currentFile;
 
 // E L E C T R O N I C S   I M P L E M E N T A T I O N
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -95,43 +90,6 @@ void wheels(int left, int right) {
 	driver(right, PIN_DRIVER_BIN1, PIN_DRIVER_BIN2, PIN_DRIVER_BPWM);
 }
 
-/** Returns the current temperature reading. */
-float temperature() {
-	return analogRead(PIN_TEMPERATURE_SENSOR) * ANALOG_TO_CELSIUS;
-}
-
-/** Writes an int to the currently open file. */
-void writeInt(int a) {
-	unsigned int asInt = *((unsigned int*) &a);
-	// Shift the int's bytes to the file.
-	for (int i = 0; i < 4; i++)
-		currentFile.write((asInt >> 8 * a) & 0xFF);
-}
-
-/** Writes a float to the currently open file. */
-void writeFloat(float f) {
-	// Convert the float to an int.
-	writeInt(*((int*) &f));
-}
-
-/** Reads an int from the currently open file. */
-int readInt() {
-	// Create an empty int.
-	unsigned int asInt = 0;
-	// Shift the read bytes to the int.
-	for (int i = 3; i >= 0; i--)
-		asInt |= currentFile.read() << (8 * i);
-	return *((int*) &asInt);
-}
-
-/** Reads a float from the currently open file. */
-float readFloat() {
-	// Create an empty int.
-	int asInt = readInt();
-	// Convert the int to a float.
-	return *((float*) &asInt);
-}
-
 /** Loads the necessary pins. */
 void setup() {
 	// Set the pin mode for the on-board LED.
@@ -145,37 +103,12 @@ void setup() {
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
 	// Set the initial state.
 	state = STATE_VERTICAL;
-	// Set up the SD card.
-	// Initialize the SD library and read the input file.
-	if (!(SD.begin() && // If the library fails to initialize.
-			(currentFile = SD.open("input.bin")) && // If the file could not be opened.
-			currentFile.available() == 20)) { // If there is not enough data given.
-		// Set the state to DONE.
-		error();
-		return;
-	}
 	// Read the input bytes.
-	rowLength = readFloat();
-	stepSize = readFloat();
-	rowWidth = readFloat();
-	rowCount = readInt();
-	turnsCW = -readInt();
-	// Close the file.
-	currentFile.close();
-	// Open the output file.
-	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
-		// Set the state to DONE if the file could not be opened.
-		error();
-		return;
-	}
-	// Write the data given by the user.
-	writeFloat(rowLength);
-	writeFloat(stepSize);
-	writeFloat(rowWidth);
-	writeInt(rowCount);
-	writeInt(-turnsCW);
-	// Close the file.
-	currentFile.close();
+	rowLength = 0.0F;
+	stepSize = 0.0F;
+	rowWidth = 0.0F;
+	rowCount = 10;
+	turnsCW = -TURN_SIGNAL;
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
@@ -199,16 +132,6 @@ void turn(char cw) {
 
 /** Stores the current temperature to the SD card. */
 void storeTemperature() {
-	// Open the output file.
-	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
-		// Set the state to DONE if the file could not be opened.
-		error();
-		return;
-	}
-	// Write the temperature.
-	writeFloat(temperature());
-	// Close the file.
-	currentFile.close();
 }
 
 // L O G I C
