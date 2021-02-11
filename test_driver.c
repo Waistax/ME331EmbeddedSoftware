@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.23
+ * Version: 2.24
  *
  * This version test the driver.
  *
@@ -74,8 +74,9 @@ void setup() {
 	pinMode(PIN_DRIVER_BIN1, OUTPUT);
 	pinMode(PIN_DRIVER_BIN2, OUTPUT);
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
+	delay(10000);
 	wheels(TURN_SIGNAL, -TURN_SIGNAL);
-	delay(5000);
+	delay(60000);
 	wheels(STOP_SIGNAL, STOP_SIGNAL);
 }
 
