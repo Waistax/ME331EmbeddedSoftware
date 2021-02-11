@@ -18,7 +18,7 @@
 // ~~~~~~~~~~~~~~~~~
 
 // Physical
-#define ANGLE_PER_TICK 0.053333F
+#define ANGLE_PER_TICK 0.5F
 #define DISPLACEMENT_PER_TICK 1.0F
 
 // Serial
