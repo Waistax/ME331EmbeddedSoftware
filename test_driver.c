@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.32
+ * Version: 2.33
  *
  * This version test the driver.
  *
@@ -15,7 +15,7 @@
 // ~~~~~~~~~~~~~~~~~
 
 // Physical
-#define ANGLE_PER_TICK 0.222222F
+#define ANGLE_PER_TICK 0.419753F
 #define DISPLACEMENT_PER_TICK 0.001900F
 
 // Serial
@@ -28,9 +28,8 @@
 #define STATE_VERTICAL 0
 #define STATE_HORIZONTAL 1
 #define STATE_ANGULAR 2
-#define STATE_STOP 3
-#define STATE_ERROR 4
-#define STATE_DONE 5
+#define STATE_ERROR 3
+#define STATE_DONE 4
 
 // Electronical
 // Left Wheel
@@ -59,7 +58,6 @@ float sinceMeasurement;
 float angle;
 int state;
 int aimedState;
-int continueState;
 int blink;
 
 // E L E C T R O N I C S   I M P L E M E N T A T I O N
@@ -162,8 +160,7 @@ void verticalStateUpdate() {
 	// Check for the end of the row.
 	if (displacement >= rowLength) {
 		// Change the state to rotation.
-		state = STATE_STOP;
-		continueState = STATE_ANGULAR;
+		state = STATE_ANGULAR;
 		// Revert the turning direction.
 		turnsCW = -turnsCW;
 		// If the previous row was the last one.
@@ -191,8 +188,7 @@ void horizontalStateUpdate() {
 	// Check for the start of the row.
 	if (displacement >= rowWidth) {
 		// Change the state to rotation.
-		state = STATE_STOP;
-		continueState = STATE_ANGULAR;
+		state = STATE_ANGULAR;
 		// Prepare for the rotation state.
 		aimedState = STATE_VERTICAL;
 		angle = 0.0F;
@@ -207,8 +203,7 @@ void angularStateUpdate() {
 	// Check for the direction.
 	if (angle >= 90.0F) {
 		// Change to the next state.
-		state = STATE_STOP;
-		continueState = aimedState;
+		state = aimedState;
 	}
 }
 
@@ -242,11 +237,6 @@ void loop() {
 		break;
 	case STATE_ANGULAR:
 		angularStateUpdate();
-		break;
-	case STATE_STOP:
-		stop();
-		delay(1000);
-		state = continueState;
 		break;
 	case STATE_ERROR:
 		// Blink the on-board LED.
