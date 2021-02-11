@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.8
+ * Version: 1.9
  *
  * Created on 28.1.2021, 21:44
  */
@@ -16,8 +16,8 @@
 // ~~~~~~~~~~~~~~~~~
 
 // Physical
-#define ANGLE_PER_TICK 1.0F
-#define DISPLACEMENT_PER_TICK 1.0F
+#define ANGLE_PER_TICK 0.222222F
+#define DISPLACEMENT_PER_TICK 0.001900F
 
 // Serial
 #define FORWARD_SIGNAL 0xFF
@@ -191,7 +191,7 @@ void stop() {
 
 /** Sets the signals so the wheels make the robot turn.
  * If the signal given is positive the direction is clockwise. */
-void turn(char cw) {
+void turn(int cw) {
 	wheels(cw, -cw);
 }
 
