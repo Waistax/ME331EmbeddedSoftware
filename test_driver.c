@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.30
+ * Version: 2.31
  *
  * This version test the driver.
  *
@@ -28,8 +28,9 @@
 #define STATE_VERTICAL 0
 #define STATE_HORIZONTAL 1
 #define STATE_ANGULAR 2
-#define STATE_ERROR 3
-#define STATE_DONE 4
+#define STATE_STOP 3
+#define STATE_ERROR 4
+#define STATE_DONE 5
 
 // Electronical
 // Left Wheel
@@ -160,7 +161,7 @@ void verticalStateUpdate() {
 	// Check for the end of the row.
 	if (displacement >= rowLength) {
 		// Change the state to rotation.
-		state = STATE_ANGULAR;
+		state = STATE_STOP;
 		// Revert the turning direction.
 		turnsCW = -turnsCW;
 		// If the previous row was the last one.
@@ -188,7 +189,7 @@ void horizontalStateUpdate() {
 	// Check for the start of the row.
 	if (displacement >= rowWidth) {
 		// Change the state to rotation.
-		state = STATE_ANGULAR;
+		state = STATE_STOP;
 		// Prepare for the rotation state.
 		aimedState = STATE_VERTICAL;
 		angle = 0.0F;
@@ -203,7 +204,7 @@ void angularStateUpdate() {
 	// Check for the direction.
 	if (angle >= 90.0F) {
 		// Change to the next state.
-		state = aimedState;
+		state = STATE_STOP;
 	}
 }
 
@@ -237,6 +238,11 @@ void loop() {
 		break;
 	case STATE_ANGULAR:
 		angularStateUpdate();
+		break;
+	case STATE_STOP:
+		stop();
+		delay(1000);
+		state = aimedState;
 		break;
 	case STATE_ERROR:
 		// Blink the on-board LED.
