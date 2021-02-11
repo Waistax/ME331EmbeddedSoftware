@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.19
+ * Version: 1.20
  *
  * Created on 28.1.2021, 21:44
  */
@@ -27,9 +27,8 @@
 // ~~~~~~~~~~~~~~~~~
 
 // Physical
-#define DISPLACEMENT_PER_TICK 0.0019
+#define DISPLACEMENT_PER_SECOND 0.00019
 #define DELAY_AFTER_SETUP 10
-#define TICK_MILLIS 10
 
 // Serial
 #define FORWARD_SIGNAL 0xFF
@@ -75,6 +74,7 @@ float angle;
 unsigned char state;
 unsigned char aimedState;
 int blink;
+unsigned long elapsedTime;
 
 // SD card
 File currentFile;
@@ -234,7 +234,7 @@ void gyroUpdate() {
 	// Read normalized values
 	Vector norm = mpu.readNormalizeGyro();
 	// Calculate Pitch, Roll and Yaw
-	yaw = yaw + norm.ZAxis * TICK_MILLIS / 1000.0;
+	yaw = yaw + norm.ZAxis * elapsedTime / 1000.0;
 #endif
 }
 
@@ -297,9 +297,10 @@ float absolute(float a) {
 void forwardMovement() {
 	// Move by a tick.
 	forward();
+	float d = DISPLACEMENT_PER_SECOND * elapsedTime;
 	// Record the displacement.
-	displacement += DISPLACEMENT_PER_TICK;
-	sinceMeasurement += DISPLACEMENT_PER_TICK;
+	displacement += d;
+	sinceMeasurement += d;
 }
 
 /** Updates the vertical state. */
@@ -420,8 +421,5 @@ void loop() {
 		break;
 	}
 	// Wait for the correct tick rate.
-	unsigned long elapsedTime = millis() - timer;
-	if (elapsedTime >= TICK_MILLIS)
-		Serial.println("We are behind the clock!");
-	delay(TICK_MILLIS - elapsedTime);
+	elapsedTime = millis() - timer;
 }
