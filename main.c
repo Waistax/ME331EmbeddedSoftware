@@ -1,30 +1,39 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.10
+ * Version: 1.11
  *
  * Created on 28.1.2021, 21:44
  */
 
+// Debug
+#define LOGGING
+#define MOVEMENT
+
 // L I B R A R I E S
 // ~~~~~~~~~~~~~~~~~
+
 // For SD Card
 #include <SPI.h>
 #include <SD.h>
+
+// For Gyro
+#include <Wire.h>
+#include <MPU6050.h>
 
 // C O N S T A N T S
 // ~~~~~~~~~~~~~~~~~
 
 // Physical
-#define ANGLE_PER_TICK 0.222222F
-#define DISPLACEMENT_PER_TICK 0.001900F
+#define DISPLACEMENT_PER_TICK 0.0019
 #define DELAY_AFTER_SETUP 10
+#define TICK_MILLIS 10
 
 // Serial
 #define FORWARD_SIGNAL 0xFF
 #define STOP_SIGNAL 0x0
 #define TURN_SIGNAL 0xFF
-#define ANALOG_TO_CELSIUS 0.48828125F
+#define ANALOG_TO_CELSIUS 0.48828125
 
 // Logical
 #define STATE_VERTICAL 0
@@ -42,6 +51,7 @@
 #define PIN_DRIVER_BIN1 2
 #define PIN_DRIVER_BIN2 4
 #define PIN_DRIVER_BPWM 3
+
 // Temperature Sensor
 #define PIN_TEMPERATURE_SENSOR A0
 
@@ -67,12 +77,17 @@ int blink;
 // SD card
 File currentFile;
 
+// Gyro
+MPU6050 mpu;
+float yaw;
+
 // E L E C T R O N I C S   I M P L E M E N T A T I O N
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 /** Outputs the signal to the driver that is connected to the given pins.
  * The turn is counter-clockwise if the signal is negative. */
 void driver(int signal, char in1, char in2, char pwm) {
+#ifdef MOVEMENT
 	// If the signal is negative turns counter-clockwise.
 	if (signal < 0) {
 		digitalWrite(in1, LOW);
@@ -83,6 +98,7 @@ void driver(int signal, char in1, char in2, char pwm) {
 		digitalWrite(in2, LOW);
 		analogWrite(pwm, signal);
 	}
+#endif
 }
 
 /** Signals the wheels to rotate with the given intensity.
@@ -96,15 +112,21 @@ void wheels(int left, int right) {
 
 /** Returns the current temperature reading. */
 float temperature() {
+#ifdef LOGGING
 	return analogRead(PIN_TEMPERATURE_SENSOR) * ANALOG_TO_CELSIUS;
+#else
+	return 0.0;
+#endif
 }
 
 /** Writes an int to the currently open file. */
 void writeInt(int a) {
+#ifdef LOGGING
 	unsigned int asInt = *((unsigned int*) &a);
 	// Shift the int's bytes to the file.
 	for (int i = 0; i < 4; i++)
 		currentFile.write((asInt >> 8 * a) & 0xFF);
+#endif
 }
 
 /** Writes a float to the currently open file. */
@@ -115,12 +137,16 @@ void writeFloat(float f) {
 
 /** Reads an int from the currently open file. */
 int readInt() {
+#ifdef LOGGING
 	// Create an empty int.
 	unsigned int asInt = 0;
 	// Shift the read bytes to the int.
 	for (int i = 3; i >= 0; i--)
 		asInt |= currentFile.read() << (8 * i);
 	return *((int*) &asInt);
+#else
+	return 0;
+#endif
 }
 
 /** Reads a float from the currently open file. */
@@ -135,6 +161,7 @@ float readFloat() {
 void setup() {
 	// Set the pin mode for the on-board LED.
 	pinMode(LED_BUILTIN, OUTPUT);
+#ifdef MOVEMENT
 	// Set the pin modes for the driver connections.
 	pinMode(PIN_DRIVER_AIN1, OUTPUT);
 	pinMode(PIN_DRIVER_AIN2, OUTPUT);
@@ -142,8 +169,18 @@ void setup() {
 	pinMode(PIN_DRIVER_BIN1, OUTPUT);
 	pinMode(PIN_DRIVER_BIN2, OUTPUT);
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
+	// Initialize gyro
+	if(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G)) {
+		error();
+		return;
+	}
+	// Set the gyro.
+	mpu.calibrateGyro();
+	mpu.setThreshold(3);
+#endif
 	// Set the initial state.
 	state = STATE_VERTICAL;
+#ifdef LOGGING
 	// Set up the SD card.
 	// Initialize the SD library and read the input file.
 	if (!(SD.begin() && // If the library fails to initialize.
@@ -175,8 +212,26 @@ void setup() {
 	writeInt(-turnsCW);
 	// Close the file.
 	currentFile.close();
+#else
+	rowLength = 1.0;
+	stepSize = 0.1;
+	rowWidth = 0.1;
+	rowCount = 10;
+	turnsCW = -TURN_SIGNAL;
+#endif
+	
 #ifdef DELAY_AFTER_SETUP
 	delay(1000 * DELAY_AFTER_SETUP);
+#endif
+}
+
+/** Updates the yaw. */
+void gyroUpdate() {
+#ifdef MOVEMENT
+	// Read normalized values
+	Vector norm = mpu.readNormalizeGyro();
+	// Calculate Pitch, Roll and Yaw
+	yaw = yaw + norm.ZAxis * TICK_MILLIS / 1000.0;
 #endif
 }
 
@@ -201,6 +256,7 @@ void turn(int cw) {
 
 /** Stores the current temperature to the SD card. */
 void storeTemperature() {
+#ifdef LOGGING
 	// Open the output file.
 	if (!(currentFile = SD.open("output.bin", FILE_WRITE))) {
 		// Set the state to DONE if the file could not be opened.
@@ -211,10 +267,26 @@ void storeTemperature() {
 	writeFloat(temperature());
 	// Close the file.
 	currentFile.close();
+#endif
 }
 
 // L O G I C
 // ~~~~~~~~~
+
+/** Makes sure the given angle is between 0 and 2Pi. */
+float zeroTo2Pi(float a) {
+	float result = a;
+	while (result < 0.0)
+		result += 360.0;
+	while (result >= 360.0)
+		result -= 360.0;
+	return result;
+}
+
+/** Returns the absolute value of the given float. */
+float abs(float a) {
+	return a < 0.0 ? -a : a;
+}
 
 /** Signals for forward movement and records the displacement.
  * The direction of movement is ignored. */
@@ -224,15 +296,6 @@ void forwardMovement() {
 	// Record the displacement.
 	displacement += DISPLACEMENT_PER_TICK;
 	sinceMeasurement += DISPLACEMENT_PER_TICK;
-}
-
-/** Signals for angular movement and records the displacement.
- * The direction of turn is ignored. */
-void angularMovement() {
-	// Turn by a tick.
-	turn(turnsCW);
-	// Record the angle.
-	angle += ANGLE_PER_TICK;
 }
 
 /** Updates the vertical state. */
@@ -252,14 +315,14 @@ void verticalStateUpdate() {
 		}
 		// Prepare for the rotation state.
 		aimedState = STATE_HORIZONTAL;
-		angle = 0.0F;
-		displacement = 0.0F;
+		angle = zeroTo2Pi(yaw);
+		displacement = 0.0;
 	// Check for the measurement spot.
 	} else if (sinceMeasurement >= stepSize) {
 		// Store the temperature.
 		storeTemperature();
 		// Reset the displacement since the last measurement.
-		sinceMeasurement = 0.0F;
+		sinceMeasurement = 0.0;
 	}
 }
 
@@ -272,20 +335,20 @@ void horizontalStateUpdate() {
 		state = STATE_ANGULAR;
 		// Prepare for the rotation state.
 		aimedState = STATE_VERTICAL;
-		angle = 0.0F;
-		displacement = 0.0F;
-		sinceMeasurement = 0.0F;
+		angle = zeroTo2Pi(yaw);
+		displacement = 0.0;
+		sinceMeasurement = 0.0;
 	}
 }
 
 /** Updates the angular state. */
 void angularStateUpdate() {
-	angularMovement();
-	// Check for the direction.
-	if (angle >= 90.0F) {
+	// Turn by a tick.
+	turn(turnsCW);
+	// If the robot turned a right angle.
+	if (abs(angle - zeroTo2Pi(yaw)) >= 90.0)
 		// Change to the next state.
 		state = aimedState;
-	}
 }
 
 /** Changes the state to ERROR and signals the wheels to stop. */
@@ -306,8 +369,8 @@ void itIsDone() {
 
 /** Updates the state of the robot. */
 void loop() {
-	// Wait for 9 milliseconds so the tickrate is around 100Hz.
-	delay(9);
+	unsigned long timer = millis();
+	gyroUpdate();
 	// Break up the logic into different functions to increase readability.
 	switch (state) {
 	case STATE_VERTICAL:
@@ -326,9 +389,10 @@ void loop() {
 			blink = LOW;
 		else
 			blink = HIGH;
+		break;
 	case STATE_DONE:
-		// If it is done tickrate should be set to around 1Hz so power is not wasted for nothing.
-		delay(990);
 		break;
 	}
+	// Wait for the correct tick rate.
+	delay(TICK_MILLIS - millis() + timer);
 }
