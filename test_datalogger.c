@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.18
+ * Version: 2.19
  *
  * This version test the driver.
  *
@@ -84,5 +84,8 @@ void setup() {
 
 /** Updates the state of the robot. */
 void loop() {
-	wheels(FORWARD_SIGNAL, STOP_SIGNAL);
+	wheels(FORWARD_SIGNAL, -FORWARD_SIGNAL);
+	delay(10000);
+	wheels(-FORWARD_SIGNAL, FORWARD_SIGNAL);
+	delay(10000);
 }
