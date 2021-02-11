@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.18
+ * Version: 1.19
  *
  * Created on 28.1.2021, 21:44
  */
@@ -260,7 +260,6 @@ void turn(int cw) {
 /** Stores the current temperature to the SD card. */
 void storeTemperature() {
 #ifdef LOGGING
-	Serial.println("Stop4");
 	// Open the output file.
 	if (!(currentFile = SD.open("output.txt", FILE_WRITE))) {
 		Serial.println("Failed to open the output file!");
@@ -268,13 +267,10 @@ void storeTemperature() {
 		error();
 		return;
 	}
-	Serial.println("Stop5");
 	// Write the temperature.
 	currentFile.println(temperature());
-	Serial.println("Stop6");
 	// Close the file.
 	currentFile.close();
-	Serial.println("Stop7");
 #endif
 }
 
@@ -310,6 +306,9 @@ void forwardMovement() {
 void verticalStateUpdate() {
 	forwardMovement();
 	// Check for the end of the row.
+	Serial.println("-----------Disp:");
+	Serial.println(displacement);
+	Serial.println(sinceMeasurement);
 	if (displacement >= rowLength) {
 		Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		Serial.print("End of the row ");
@@ -333,12 +332,9 @@ void verticalStateUpdate() {
 		displacement = 0.0;
 	// Check for the measurement spot.
 	} else if (sinceMeasurement >= stepSize) {
-		Serial.println("Stop1");
 		stop();
 		// Store the temperature.
-		Serial.println("Stop2");
 		storeTemperature();
-		Serial.println("Stop3");
 		// Reset the displacement since the last measurement.
 		sinceMeasurement = 0.0;
 	}
@@ -424,5 +420,8 @@ void loop() {
 		break;
 	}
 	// Wait for the correct tick rate.
-	delay(TICK_MILLIS - millis() + timer);
+	unsigned long millis = millis() - timer;
+	if (millis >= TICK_MILLIS)
+		Serial.println("We are behind the clock!");
+	delay(TICK_MILLIS - millis);
 }
