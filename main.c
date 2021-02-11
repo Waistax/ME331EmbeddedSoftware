@@ -284,7 +284,7 @@ float zeroTo2Pi(float a) {
 }
 
 /** Returns the absolute value of the given float. */
-float abs(float a) {
+float absolute(float a) {
 	return a < 0.0 ? -a : a;
 }
 
@@ -346,7 +346,7 @@ void angularStateUpdate() {
 	// Turn by a tick.
 	turn(turnsCW);
 	// If the robot turned a right angle.
-	if (abs(angle - zeroTo2Pi(yaw)) >= 90.0)
+	if (absolute(angle - zeroTo2Pi(yaw)) >= 90.0)
 		// Change to the next state.
 		state = aimedState;
 }
