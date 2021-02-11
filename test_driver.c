@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.35
+ * Version: 2.36
  *
  * This version test the driver.
  *
@@ -15,8 +15,8 @@
 // ~~~~~~~~~~~~~~~~~
 
 // Physical
-#define ANGLE_PER_TICK_CCW 0.419753F
-#define ANGLE_PER_TICK_CW 0.335802F
+#define ANGLE_PER_TICK_CCW 0.25F
+#define ANGLE_PER_TICK_CW 0.25F
 #define DISPLACEMENT_PER_TICK 0.001900F
 
 // Serial
