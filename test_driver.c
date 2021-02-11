@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.29
+ * Version: 2.30
  *
  * This version test the driver.
  *
@@ -16,7 +16,7 @@
 
 // Physical
 #define ANGLE_PER_TICK 0.222222F
-#define DISPLACEMENT_PER_TICK 1.0F
+#define DISPLACEMENT_PER_TICK 0.001900F
 
 // Serial
 #define FORWARD_SIGNAL 0xFF
@@ -101,9 +101,9 @@ void setup() {
 	// Set the initial state.
 	state = STATE_VERTICAL;
 	// Read the input bytes.
-	rowLength = 100.0F;
+	rowLength = 1.0F;
 	stepSize = 10.0F;
-	rowWidth = 100.0F;
+	rowWidth = 0.1F;
 	rowCount = 10;
 	turnsCW = -TURN_SIGNAL;
 	delay(10000);
