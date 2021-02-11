@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 2.17
+ * Version: 2.18
  *
  * This version test the driver.
  *
@@ -43,22 +43,6 @@
 // F I E L D S
 // ~~~~~~~~~~~
 
-// Set by the user.
-float rowLength;
-float stepSize;
-float rowWidth;
-int rowCount;
-int turnsCW;
-
-// State of the robot.
-int row;
-float displacement;
-float sinceMeasurement;
-float angle;
-unsigned char state;
-unsigned char aimedState;
-int blink;
-
 // E L E C T R O N I C S   I M P L E M E N T A T I O N
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -97,155 +81,15 @@ void setup() {
 	pinMode(PIN_DRIVER_BIN1, OUTPUT);
 	pinMode(PIN_DRIVER_BIN2, OUTPUT);
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
-	// Set the initial state.
-	state = STATE_VERTICAL;
-	// Read the input bytes.
-	rowLength = 0.0F;
-	stepSize = 0.0F;
-	rowWidth = 0.0F;
-	rowCount = 10;
-	turnsCW = -TURN_SIGNAL;
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-/** Sets the signals so the wheels make the robot go forwards. */
-void forward() {
-	wheels(FORWARD_SIGNAL, FORWARD_SIGNAL);
-}
-
-/** Sets the signals so the wheels stop turning. */
-void stop() {
-	wheels(STOP_SIGNAL, STOP_SIGNAL);
-}
-
-/** Sets the signals so the wheels make the robot turn.
- * If the signal given is positive the direction is clockwise. */
-void turn(char cw) {
-	wheels(cw, -cw);
-}
-
-/** Stores the current temperature to the SD card. */
-void storeTemperature() {
-}
-
 // L O G I C
 // ~~~~~~~~~
 
-/** Signals for forward movement and records the displacement.
- * The direction of movement is ignored. */
-void forwardMovement() {
-	// Move by a tick.
-	forward();
-	// Record the displacement.
-	displacement += DISPLACEMENT_PER_TICK;
-	sinceMeasurement += DISPLACEMENT_PER_TICK;
-}
-
-/** Signals for angular movement and records the displacement.
- * The direction of turn is ignored. */
-void angularMovement() {
-	// Turn by a tick.
-	turn(turnsCW);
-	// Record the angle.
-	angle += ANGLE_PER_TICK;
-}
-
-/** Updates the vertical state. */
-void verticalStateUpdate() {
-	forwardMovement();
-	// Check for the end of the row.
-	if (displacement >= rowLength) {
-		// Change the state to rotation.
-		state = STATE_ANGULAR;
-		// Revert the turning direction.
-		turnsCW = -turnsCW;
-		// If the previous row was the last one.
-		if (++row == rowCount) {
-			// Change the state to done.
-			itIsDone();
-			return;
-		}
-		// Prepare for the rotation state.
-		aimedState = STATE_HORIZONTAL;
-		angle = 0.0F;
-		displacement = 0.0F;
-	// Check for the measurement spot.
-	} else if (sinceMeasurement >= stepSize) {
-		// Store the temperature.
-		storeTemperature();
-		// Reset the displacement since the last measurement.
-		sinceMeasurement = 0.0F;
-	}
-}
-
-/** Updates the horizontal state. */
-void horizontalStateUpdate() {
-	forwardMovement();
-	// Check for the start of the row.
-	if (displacement >= rowWidth) {
-		// Change the state to rotation.
-		state = STATE_ANGULAR;
-		// Prepare for the rotation state.
-		aimedState = STATE_VERTICAL;
-		angle = 0.0F;
-		displacement = 0.0F;
-		sinceMeasurement = 0.0F;
-	}
-}
-
-/** Updates the angular state. */
-void angularStateUpdate() {
-	angularMovement();
-	// Check for the direction.
-	if (angle >= 90.0F) {
-		// Change to the next state.
-		state = aimedState;
-	}
-}
-
-/** Changes the state to ERROR and signals the wheels to stop. */
-void error() {
-	state = STATE_ERROR;
-	// Prepare for blinking.
-	blink = HIGH;
-	// Stop the wheels.
-	stop();
-}
-
-/** Changes the state to DONE and signals the wheels to stop. */
-void itIsDone() {
-	state = STATE_DONE;
-	// Stop the wheels.
-	stop();
-}
-
 /** Updates the state of the robot. */
 void loop() {
-	// Wait for 9 milliseconds so the tickrate is around 100Hz.
-	delay(9);
-	// Break up the logic into different functions to increase readability.
-	switch (state) {
-	case STATE_VERTICAL:
-		verticalStateUpdate();
-		break;
-	case STATE_HORIZONTAL:
-		horizontalStateUpdate();
-		break;
-	case STATE_ANGULAR:
-		angularStateUpdate();
-		break;
-	case STATE_ERROR:
-		// Blink the on-board LED.
-		digitalWrite(LED_BUILTIN, blink);
-		if (blink == HIGH)
-			blink = LOW;
-		else
-			blink = HIGH;
-	case STATE_DONE:
-		// If it is done tickrate should be set to around 1Hz so power is not wasted for nothing.
-		delay(990);
-		break;
-	}
+	wheels(FORWARD_SIGNAL, STOP_SIGNAL);
 }
