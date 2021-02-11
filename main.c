@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.9
+ * Version: 1.10
  *
  * Created on 28.1.2021, 21:44
  */
@@ -18,6 +18,7 @@
 // Physical
 #define ANGLE_PER_TICK 0.222222F
 #define DISPLACEMENT_PER_TICK 0.001900F
+#define DELAY_AFTER_SETUP 10
 
 // Serial
 #define FORWARD_SIGNAL 0xFF
@@ -174,6 +175,9 @@ void setup() {
 	writeInt(-turnsCW);
 	// Close the file.
 	currentFile.close();
+#ifdef DELAY_AFTER_SETUP
+	delay(1000 * DELAY_AFTER_SETUP);
+#endif
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
