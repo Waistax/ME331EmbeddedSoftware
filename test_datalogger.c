@@ -74,6 +74,11 @@ void setup() {
 	pinMode(PIN_DRIVER_BIN1, OUTPUT);
 	pinMode(PIN_DRIVER_BIN2, OUTPUT);
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
+	
+	wheels(FORWARD_SIGNAL, -FORWARD_SIGNAL);
+	delay(1000);
+	wheels(-FORWARD_SIGNAL, FORWARD_SIGNAL);
+	delay(1000);
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
@@ -84,8 +89,4 @@ void setup() {
 
 /** Updates the state of the robot. */
 void loop() {
-	wheels(FORWARD_SIGNAL, -FORWARD_SIGNAL);
-	delay(10000);
-	wheels(-FORWARD_SIGNAL, FORWARD_SIGNAL);
-	delay(10000);
 }
