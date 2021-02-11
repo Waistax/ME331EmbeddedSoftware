@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.16
+ * Version: 1.17
  *
  * Created on 28.1.2021, 21:44
  */
@@ -10,6 +10,7 @@
 //#define READING
 #define LOGGING
 #define MOVEMENT
+#define DEBUG
 
 // L I B R A R I E S
 // ~~~~~~~~~~~~~~~~~
@@ -179,11 +180,11 @@ void setup() {
 		return;
 	}
 	// Read the input bytes.
-	rowLength = readFloat();
-	stepSize = readFloat();
-	rowWidth = readFloat();
-	rowCount = readInt();
-	turnsCW = -readInt();
+//	rowLength = readFloat();
+//	stepSize = readFloat();
+//	rowWidth = readFloat();
+//	rowCount = readInt();
+//	turnsCW = -readInt();
 	// Close the file.
 	currentFile.close();
 #endif
@@ -214,6 +215,17 @@ void setup() {
 	Serial.println("Delaying...");
 	delay(1000 * DELAY_AFTER_SETUP);
 #endif
+	Serial.println("Values:");
+	Serial.print("Row Length: ");
+	Serial.println(rowLength);
+	Serial.print("Step Size: ");
+	Serial.println(stepSize);
+	Serial.print("Row Width: ");
+	Serial.println(rowWidth);
+	Serial.print("Row Count: ");
+	Serial.println(rowCount);
+	Serial.print("Turns CW: ");
+	Serial.println(-turnsCW);
 }
 
 /** Updates the yaw. */
@@ -317,6 +329,7 @@ void verticalStateUpdate() {
 		displacement = 0.0;
 	// Check for the measurement spot.
 	} else if (sinceMeasurement >= stepSize) {
+		stop();
 		// Store the temperature.
 		storeTemperature();
 		// Reset the displacement since the last measurement.
