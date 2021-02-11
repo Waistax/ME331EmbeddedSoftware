@@ -216,14 +216,6 @@ void setup() {
 #endif
 }
 
-void close() {
-	Serial.println("Closing...");
-	wheels(STOP_SIGNAL, STOP_SIGNAL);
-#ifdef LOGGING
-	currentFile.close();
-#endif
-}
-
 /** Updates the yaw. */
 void gyroUpdate() {
 #ifdef MOVEMENT
@@ -382,7 +374,7 @@ void error() {
 void itIsDone() {
 	state = STATE_DONE;
 	// Stop the wheels.
-	close();
+	stop();
 }
 
 /** Updates the state of the robot. */
