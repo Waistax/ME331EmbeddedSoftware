@@ -196,11 +196,11 @@ void setup() {
 		return;
 	}
 	// Write the data given by the user.
-	writeFloat(rowLength);
-	writeFloat(stepSize);
-	writeFloat(rowWidth);
-	writeInt(rowCount);
-	writeInt(-turnsCW);
+//	writeFloat(rowLength);
+//	writeFloat(stepSize);
+//	writeFloat(rowWidth);
+//	writeInt(rowCount);
+//	writeInt(-turnsCW);
 	// Close the file.
 	currentFile.close();
 #endif
@@ -356,8 +356,8 @@ void angularStateUpdate() {
 	Serial.print(yaw);
 	float difference = absolute(angle - yaw);
 	Serial.print("Difference: ");
-	Serial.println("______________________");
 	Serial.println(difference);
+	Serial.println("______________________");
 	// If the robot turned a right angle.
 	if (difference >= 90.0)
 		// Change to the next state.
