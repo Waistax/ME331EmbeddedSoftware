@@ -207,7 +207,7 @@ void setup() {
 #ifdef READING
 	PRINTLN("Reading active.");
 	// If there is not enough data given.
-	if (!(currentFile = SD.open("input.bin")) {
+	if (!(currentFile = SD.open("input.bin"))) {
 		PRINTLN("Failed to open the input.bin file!");
 		// Set the state to DONE.
 		error();
