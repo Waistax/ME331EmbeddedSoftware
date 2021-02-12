@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.30
+ * Version: 1.31
  *
  * Created on 28.1.2021, 21:44
  */
@@ -330,6 +330,14 @@ void verticalStateUpdate() {
 void horizontalStateUpdate() {
 	// Move by a tick.
 	forward();
+	PRINT("Aimed Yaw:");
+	PRINT(aimedYaw);
+	PRINT(" Yaw:");
+	PRINT(yaw);
+	PRINT(" Angle:");
+	PRINT(angle);
+	PRINT(" Position:");
+	PRINTLN(position);
 	// Check for the start of the row.
 	if (position >= rowWidth) {
 		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -343,14 +351,6 @@ void horizontalStateUpdate() {
 		dataPoint = 0;
 		prepareForTurn();
 	}
-	PRINT("Aimed Yaw:");
-	PRINT(aimedYaw);
-	PRINT(" Yaw:");
-	PRINT(yaw);
-	PRINT(" Angle:");
-	PRINT(angle);
-	PRINT(" Position:");
-	PRINTLN(position);
 }
 
 /** Updates the angular state. */
