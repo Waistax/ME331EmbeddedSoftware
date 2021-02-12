@@ -248,7 +248,7 @@ void setup() {
 	turnsCCW = currentFile.read();
 	// Close the file.
 	currentFile.close();
-	currentFile = SD.open("testread.bin");
+	currentFile = SD.open("testread.bin", FILE_WRITE);
 	writeFloat(1.0);
 	writeFloat(0.03);
 	writeFloat(0.2);
