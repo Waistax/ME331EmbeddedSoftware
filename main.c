@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.34
+ * Version: 1.35
  *
  * Created on 28.1.2021, 21:44
  */
@@ -40,7 +40,7 @@
 
 // Serial
 #define ANALOG_TO_CELSIUS 0.48828125
-#define ANGLE_UPPER_BOUND 0.01
+#define ANGLE_UPPER_BOUND 0
 
 // Logical
 #define STATE_VERTICAL 0
@@ -156,10 +156,10 @@ void setup() {
 	// Set the initial state.
 	state = STATE_VERTICAL;
 	// Default
-	rowLength = 1.0;
+	rowLength = 0.5;
 	stepSize = 0.1;
 	rowWidth = 0.1;
-	rowCount = 10;
+	rowCount = 2;
 	turnsCCW = 1;
 #ifdef LOGGING
 	PRINTLN("Logging active.");
@@ -245,7 +245,7 @@ void setup() {
 void forward() {
 	wheels(255, 255);
 	speed = DISPLACEMENT_PER_SECOND;
-	float tol = 0.055; //Tolerance value in degrees. (Calibrated by trial an error starting from 1.00 and trying variations between 0.00, 0.00 shaky, 1.00 error too high.)
+	float tol = 0.0; //Tolerance value in degrees. (Calibrated by trial an error starting from 1.00 and trying variations between 0.00, 0.00 shaky, 1.00 error too high.)
 	if (yaw >= -10 && yaw <= 10) { //VERTICAL
 		if (yaw >= -tol && yaw <= tol)
 			wheels(255, 255);
@@ -288,8 +288,10 @@ void storeTemperature() {
 	}
 	// Write the temperature.
 	currentFile.print("Row: ");
-	currentFile.println(row);
-	currentFile.print("Position: ");
+	currentFile.print(row);
+	currentFile.print(" | Position: ");
+	currentFile.print(position);
+	currentFile.print(" | Temperature: ");
 	currentFile.println(temperature());
 	// Close the file.
 	currentFile.close();
