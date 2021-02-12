@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.25
+ * Version: 1.26
  *
  * Created on 28.1.2021, 21:44
  */
@@ -333,11 +333,20 @@ void horizontalStateUpdate() {
 /** Updates the angular state. */
 void angularStateUpdate() {
 	// Turn by a tick.
-	int turnSignal = 0;
-	if (angle > 0.0)
-		turnSignal = map(angle, 0, 90, 150, 255);
-	else
-		turnSignal = map(angle, 0, -90, -150, -255);
+	if (angle > 0.0) {
+		int turnSignal = map(angle, 0, 90, 100, 255);
+		// If the robot completed the turn.
+		if (turnSignal == 100)
+			// Change to the next state.
+			state = aimedState;
+	} else {
+		int turnSignal = map(angle, 0, -90, -100, -255);
+		// If the robot completed the turn.
+		if (turnSignal == -100)
+			// Change to the next state.
+			state = aimedState;
+	}
+	wheels(-turnSignal, turnSignal);
 	PRINT("Aimed Yaw:");
 	PRINT(aimedYaw);
 	PRINT(" Yaw:");
@@ -346,11 +355,6 @@ void angularStateUpdate() {
 	PRINT(angle);
 	PRINT(" Signal:");
 	PRINTLN(turnSignal);
-	wheels(-turnSignal, turnSignal);
-	// If the robot completed the turn.
-	if (!turnSignal)
-		// Change to the next state.
-		state = aimedState;
 }
 
 /** Changes the state to ERROR and signals the wheels to stop. */
