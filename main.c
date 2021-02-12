@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.32
+ * Version: 1.33
  *
  * Created on 28.1.2021, 21:44
  */
@@ -40,7 +40,7 @@
 
 // Serial
 #define ANALOG_TO_CELSIUS 0.48828125
-#define TURN_SIGNAL_LOWER_BOUND 125
+#define TURN_SIGNAL_LOWER_BOUND 200
 
 // Logical
 #define STATE_VERTICAL 0
@@ -286,6 +286,16 @@ void prepareForTurn() {
 void verticalStateUpdate() {
 	// Move by a tick.
 	forward();
+	PRINT("Aimed Yaw:");
+	PRINT(aimedYaw);
+	PRINT(" Yaw:");
+	PRINT(yaw);
+	PRINT(" Angle:");
+	PRINT(angle);
+	PRINT(" Position:");
+	PRINT(position);
+	PRINT(" Data Point:");
+	PRINTLN(dataPoint);
 	// Check for the end of the row.
 	if (position >= rowLength) {
 		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -315,16 +325,6 @@ void verticalStateUpdate() {
 		storeTemperature();
 		dataPoint++;
 	}
-	PRINT("Aimed Yaw:");
-	PRINT(aimedYaw);
-	PRINT(" Yaw:");
-	PRINT(yaw);
-	PRINT(" Angle:");
-	PRINT(angle);
-	PRINT(" Position:");
-	PRINT(position);
-	PRINT(" Data Point:");
-	PRINTLN(dataPoint);
 }
 
 /** Updates the horizontal state. */
@@ -359,7 +359,7 @@ void angularStateUpdate() {
 	// Turn by a tick.
 	int turnSignal = 0;
 	if (angle > 0.0) {
-		turnSignal = map(sqrt(angle), 0, sqrt(90), TURN_SIGNAL_LOWER_BOUND, 255);
+		turnSignal = map(angle, 0, 90, TURN_SIGNAL_LOWER_BOUND, 255);
 		// If the robot completed the turn.
 		if (turnSignal == TURN_SIGNAL_LOWER_BOUND) {
 			// Change to the next state.
@@ -370,7 +370,7 @@ void angularStateUpdate() {
 			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");			
 		}
 	} else {
-		turnSignal = map(sqrt(-angle), 0, sqrt(90), -TURN_SIGNAL_LOWER_BOUND, -255);
+		turnSignal = map(-angle, 0, 90, -TURN_SIGNAL_LOWER_BOUND, -255);
 		// If the robot completed the turn.
 		if (turnSignal == -TURN_SIGNAL_LOWER_BOUND) {
 			// Change to the next state.
