@@ -204,7 +204,7 @@ void setup() {
 #endif
 #ifdef LOGGING
 	// Open the output file.
-	if (!(currentFile = SD.open("output.txt", O_WRITE | O_CREATE))) {
+	if (!(currentFile = SD.open("output.txt", FILE_WRITE))) {
 		PRINTLN("Failed to open the output file!");
 		// Set the state to DONE if the file could not be opened.
 		error();
