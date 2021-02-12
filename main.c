@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.41
+ * Version: 1.42
  *
  * Created on 28.1.2021, 21:44
  */
@@ -247,6 +247,13 @@ void setup() {
 	rowCount = readInt();
 	turnsCCW = currentFile.read();
 	// Close the file.
+	currentFile.close();
+	currentFile = SD.open("testread.bin");
+	writeFloat(1.0);
+	writeFloat(0.03);
+	writeFloat(0.2);
+	writeInt(4);
+	currentFile.write(0x00);
 	currentFile.close();
 #endif
 #ifdef LOGGING
