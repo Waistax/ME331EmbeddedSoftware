@@ -152,7 +152,7 @@ void writeFloat(float f) {
 	// Convert it to a byte array.
 	converter.value = f;
 	// Write the byte array.
-	currentFile.write(converted.bytes, 4);
+	currentFile.write(converter.bytes, 4);
 }
 
 int readInt() {
