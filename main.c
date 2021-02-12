@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.39
+ * Version: 1.40
  *
  * Created on 28.1.2021, 21:44
  */
@@ -147,7 +147,7 @@ int readInt() {
 	unsigned int asInt = 0;
 	// Shift the read bytes to the int.
 	for (int i = 3; i >= 0; i--)
-		asInt |= currentFile.read() << (8 * i);
+		asInt |= (currentFile.read() & 0xFF) << (8 * i);
 	return *((int*) &asInt);
 }
 
