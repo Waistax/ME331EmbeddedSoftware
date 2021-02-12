@@ -213,8 +213,8 @@ void setup() {
 		error();
 		return;
 	}
-	if (currentFile.available() != 20) {
-		PRINTLN("The input.bin file is not 20 bytes long!");
+	if (currentFile.available() != 17) {
+		PRINTLN("The input.bin file is not 17 bytes long!");
 		// Set the state to DONE.
 		error();
 		return;
