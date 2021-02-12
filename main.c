@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.23
+ * Version: 1.25
  *
  * Created on 28.1.2021, 21:44
  */
@@ -277,7 +277,7 @@ void storeTemperature() {
 
 void prepareForTurn() {
 	position = 0.0;
-	aimedYaw = yaw + (turnsCCW < 0 ? 90.0 : -90.0);
+	aimedYaw = yaw - 90.0 + turnsCCW * 180.0;
 }
 
 /** Updates the vertical state. */
@@ -293,7 +293,7 @@ void verticalStateUpdate() {
 		// Change the state to rotation.
 		state = STATE_ANGULAR;
 		// Revert the turning direction.
-		turnsCCW = !turnsCCW;
+		turnsCCW != turnsCCW;
 		// If the previous row was the last one.
 		if (++row == rowCount) {
 			// Change the state to done.
@@ -333,7 +333,11 @@ void horizontalStateUpdate() {
 /** Updates the angular state. */
 void angularStateUpdate() {
 	// Turn by a tick.
-	int turnSignal = angle / 90.0 * 255;
+	int turnSignal = 0;
+	if (angle > 0.0)
+		turnSignal = map(angle, 0, 90, 150, 255);
+	else
+		turnSignal = map(angle, 0, -90, -150, -255);
 	PRINT("Aimed Yaw:");
 	PRINT(aimedYaw);
 	PRINT(" Yaw:");
@@ -372,7 +376,7 @@ void loop() {
 	// Read normalized values
 	Vector norm = mpu.readNormalizeGyro();
 	// Calculate Pitch, Roll and Yaw
-	yaw = yaw + norm.ZAxis * elapsedTime / 1000.0;
+	yaw += norm.ZAxis * elapsedTime / 1000.0;
 	angle = aimedYaw - yaw;
 	// Record the displacement.
 	position += speed * elapsedTime;
@@ -390,7 +394,7 @@ void loop() {
 		break;
 	case STATE_ERROR:
 		// Blink the on-board LED.
-		digitalWrite(LED_BUILTIN, blink = !blink);
+		digitalWrite(LED_BUILTIN, blink != blink);
 		delay(100);
 		break;
 	case STATE_DONE:
