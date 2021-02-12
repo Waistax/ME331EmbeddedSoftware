@@ -253,7 +253,10 @@ void setup() {
 	writeFloat(0.03);
 	writeFloat(0.2);
 	writeInt(4);
-	currentFile.write(0x00);
+	unsigned char a = 0;
+	currentFile.write(a);
+	currentFile(0.42);
+	currentFile(27)
 	currentFile.close();
 #endif
 #ifdef LOGGING
