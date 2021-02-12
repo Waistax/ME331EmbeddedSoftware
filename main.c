@@ -1,14 +1,14 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.38
+ * Version: 1.39
  *
  * Created on 28.1.2021, 21:44
  */
 
-//#define READING
+#define READING
 #define LOGGING
-#define MOVEMENT
+//#define MOVEMENT
 #define SERIAL
 
 // Serial
@@ -128,6 +128,37 @@ float temperature() {
 #endif
 }
 
+/** Writes an int to the currently open file. */
+void writeInt(int a) {
+	unsigned int asInt = *((unsigned int*) &a);
+	// Shift the int's bytes to the file.
+	for (int i = 0; i < 4; i++)
+		currentFile.write((asInt >> 8 * a) & 0xFF);
+}
+
+/** Writes a float to the currently open file. */
+void writeFloat(float f) {
+	// Convert the float to an int.
+	writeInt(*((int*) &f));
+}
+
+int readInt() {
+	// Create an empty int.
+	unsigned int asInt = 0;
+	// Shift the read bytes to the int.
+	for (int i = 3; i >= 0; i--)
+		asInt |= currentFile.read() << (8 * i);
+	return *((int*) &asInt);
+}
+
+/** Reads a float from the currently open file. */
+float readFloat() {
+	// Create an empty int.
+	int asInt = readInt();
+	// Convert the int to a float.
+	return *((float*) &asInt);
+}
+
 /** Loads the necessary pins. */
 void setup() {
 #ifdef SERIAL
@@ -189,11 +220,11 @@ void setup() {
 		return;
 	}
 	// Read the input bytes.
-//	rowLength = readFloat();
-//	stepSize = readFloat();
-//	rowWidth = readFloat();
-//	rowCount = readInt();
-//	turnsCCW = readInt();
+	rowLength = readFloat();
+	stepSize = readFloat();
+	rowWidth = readFloat();
+	rowCount = readInt();
+	turnsCCW = currentFile.read();
 	// Close the file.
 	currentFile.close();
 #endif
