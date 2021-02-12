@@ -145,7 +145,7 @@ void setup() {
 	pinMode(PIN_DRIVER_BIN2, OUTPUT);
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
 	// Initialize gyro
-	if(!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G)) {
+	if (!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G)) {
 		error();
 		return;
 	}
@@ -245,6 +245,29 @@ void setup() {
 void forward() {
 	wheels(255, 255);
 	speed = DISPLACEMENT_PER_SECOND;
+	float tol = 0.055; //Tolerance value in degrees. (Calibrated by trial an error starting from 1.00 and trying variations between 0.00, 0.00 shaky, 1.00 error too high.)
+	if (yaw >= -10 && yaw <= 10) { //VERTICAL
+		if (yaw >= -tol && yaw <= tol)
+			wheels(255, 255);
+		else if (yaw > tol)
+			wheels(255, 255 * (200 * yaw / 90 + 100));
+		else if (yaw < -tol)
+			wheels(255 * (-200 * yaw / 90 + 100), 255);
+	} else if (yaw >= -100 && yaw <= -80) { //HORIZONTAL
+		if (yaw >= -90 - tol && yaw <= -90 + tol)
+			wheels(255, 255);
+		else if (yaw > -90 + tol)
+			wheels(255, 255 * (-200 * yaw / 90 - 100));
+		else if (yaw < -90 - tol)
+			wheels(255 * (200 * yaw / 90 + 300), 255);
+	} else if (yaw >= -190 && yaw <= -170) {  //VERTICAL BACK
+		if (yaw >= -180 - tol && yaw <= -180 + tol)
+			wheels(255, 255);
+		else if (yaw > -180 + tol)
+			wheels(255, 255 * (-200 * yaw / 90 - 300));
+		else if (yaw < -180 - tol)
+			wheels(255 * (200 * yaw / 90 + 500), 255);
+	}
 }
 
 /** Sets the signals so the wheels stop turning. */
@@ -319,7 +342,7 @@ void verticalStateUpdate() {
 		// Prepare for the rotation state.
 		aimedState = STATE_HORIZONTAL;
 		prepareForTurn();
-	// Check for the measurement spot.
+		// Check for the measurement spot.
 	} else if (position - dataPoint * stepSize > 0) {
 		// Store the temperature.
 		storeTemperature();
@@ -366,7 +389,7 @@ void angularStateUpdate() {
 			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			PRINT("End of the turn CCW: ");
 			PRINTLN(turnsCCW);
-			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");			
+			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		}
 	} else {
 		wheels(255, -255);
@@ -377,18 +400,17 @@ void angularStateUpdate() {
 			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			PRINT("End of the turn CCW: ");
 			PRINTLN(turnsCCW);
-			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");					
+			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		}
 	}
-	
+
 	PRINT("Aimed Yaw:");
 	PRINT(aimedYaw);
 	PRINT(" Yaw:");
 	PRINT(yaw);
 	PRINT(" Angle:");
-	PRINT(angle);
-	PRINT(" Signal:");
-	PRINTLN(turnSignal);
+	PRINTLN(angle);
+
 }
 
 /** Changes the state to ERROR and signals the wheels to stop. */
