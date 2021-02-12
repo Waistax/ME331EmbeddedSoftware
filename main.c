@@ -1,16 +1,24 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.20
+ * Version: 1.21
  *
  * Created on 28.1.2021, 21:44
  */
 
-// Debug
 //#define READING
 #define LOGGING
 #define MOVEMENT
-#define DEBUG
+#define SERIAL
+
+// Serial
+#ifdef SERIAL
+#define PRINT(X) Serial.print(X)
+#define PRINTLN(X) Serial.println(X)
+#else
+#define PRINT(X)
+#define PRINTLN(X)
+#endif
 
 // L I B R A R I E S
 // ~~~~~~~~~~~~~~~~~
@@ -31,9 +39,6 @@
 #define DELAY_AFTER_SETUP 10
 
 // Serial
-#define FORWARD_SIGNAL 0xFF
-#define STOP_SIGNAL 0x0
-#define TURN_SIGNAL 0xFF
 #define ANALOG_TO_CELSIUS 0.48828125
 
 // Logical
@@ -52,7 +57,6 @@
 #define PIN_DRIVER_BIN1 2
 #define PIN_DRIVER_BIN2 4
 #define PIN_DRIVER_BPWM 3
-
 // Temperature Sensor
 #define PIN_TEMPERATURE_SENSOR A0
 
@@ -64,16 +68,18 @@ float rowLength;
 float stepSize;
 float rowWidth;
 int rowCount;
-int turnsCW;
 
 // State of the robot.
 int row;
-float displacement;
-float sinceMeasurement;
+int dataPoint;
+float position;
+float speed;
+float aimedYaw;
 float angle;
+unsigned char turnsCCW;
+unsigned char blink;
 unsigned char state;
 unsigned char aimedState;
-int blink;
 unsigned long elapsedTime;
 
 // SD card
@@ -123,11 +129,13 @@ float temperature() {
 
 /** Loads the necessary pins. */
 void setup() {
+#ifdef SERIAL
 	Serial.begin(115200);
+#endif
 	// Set the pin mode for the on-board LED.
 	pinMode(LED_BUILTIN, OUTPUT);
 #ifdef MOVEMENT
-	Serial.println("Movement active.");
+	PRINTLN("Movement active.");
 	// Set the pin modes for the driver connections.
 	pinMode(PIN_DRIVER_AIN1, OUTPUT);
 	pinMode(PIN_DRIVER_AIN2, OUTPUT);
@@ -151,30 +159,30 @@ void setup() {
 	stepSize = 0.1;
 	rowWidth = 0.1;
 	rowCount = 10;
-	turnsCW = -TURN_SIGNAL;
+	turnsCCW = 0;
 #ifdef LOGGING
-	Serial.println("Logging active.");
+	PRINTLN("Logging active.");
 	// Set up the SD card.
 	// Initialize the SD library and read the input file.
 	// If the library fails to initialize.
 	if (!SD.begin()) {
-		Serial.println("Failed to initialize SD library!");
+		PRINTLN("Failed to initialize SD library!");
 		// Set the state to DONE.
 		error();
 		return;
 	}
 #endif
 #ifdef READING
-	Serial.println("Reading active.");
+	PRINTLN("Reading active.");
 	// If there is not enough data given.
 	if (!(currentFile = SD.open("input.bin")) {
-		Serial.println("Failed to open the input.bin file!");
+		PRINTLN("Failed to open the input.bin file!");
 		// Set the state to DONE.
 		error();
 		return;
 	}
 	if (currentFile.available() != 20) {
-		Serial.println("The input.bin file is not 20 bytes long!");
+		PRINTLN("The input.bin file is not 20 bytes long!");
 		// Set the state to DONE.
 		error();
 		return;
@@ -184,14 +192,14 @@ void setup() {
 //	stepSize = readFloat();
 //	rowWidth = readFloat();
 //	rowCount = readInt();
-//	turnsCW = -readInt();
+//	turnsCCW = readInt();
 	// Close the file.
 	currentFile.close();
 #endif
 #ifdef LOGGING
 	// Open the output file.
 	if (!(currentFile = SD.open("output.txt", FILE_WRITE))) {
-		Serial.println("Failed to open the output file!");
+		PRINTLN("Failed to open the output file!");
 		// Set the state to DONE if the file could not be opened.
 		error();
 		return;
@@ -205,37 +213,28 @@ void setup() {
 	currentFile.println(rowWidth);
 	currentFile.print("Row Count: ");
 	currentFile.println(rowCount);
-	currentFile.print("Turns CW: ");
-	currentFile.println(-turnsCW);
+	currentFile.print("Initial Turn CCW: ");
+	currentFile.println(turnsCCW);
 	// Close the file.
 	currentFile.close();
 #endif
-	
 #ifdef DELAY_AFTER_SETUP
-	Serial.println("Delaying...");
+	PRINT("Delaying for ");
+	PRINT(DELAY_AFTER_SETUP);
+	PRINTLN(" seconds...");
 	delay(1000 * DELAY_AFTER_SETUP);
 #endif
-	Serial.println("Values:");
-	Serial.print("Row Length: ");
-	Serial.println(rowLength);
-	Serial.print("Step Size: ");
-	Serial.println(stepSize);
-	Serial.print("Row Width: ");
-	Serial.println(rowWidth);
-	Serial.print("Row Count: ");
-	Serial.println(rowCount);
-	Serial.print("Turns CW: ");
-	Serial.println(-turnsCW);
-}
-
-/** Updates the yaw. */
-void gyroUpdate() {
-#ifdef MOVEMENT
-	// Read normalized values
-	Vector norm = mpu.readNormalizeGyro();
-	// Calculate Pitch, Roll and Yaw
-	yaw = yaw + norm.ZAxis * elapsedTime / 1000.0;
-#endif
+	PRINTLN("Values:");
+	PRINT("Row Length: ");
+	PRINTLN(rowLength);
+	PRINT("Step Size: ");
+	PRINTLN(stepSize);
+	PRINT("Row Width: ");
+	PRINTLN(rowWidth);
+	PRINT("Row Count: ");
+	PRINTLN(rowCount);
+	PRINT("Initial Turn CCW: ");
+	PRINTLN(turnsCCW);
 }
 
 // E L E C T R O N I C S   I N T E R F A C E
@@ -243,18 +242,14 @@ void gyroUpdate() {
 
 /** Sets the signals so the wheels make the robot go forwards. */
 void forward() {
-	wheels(FORWARD_SIGNAL, FORWARD_SIGNAL);
+	wheels(255, 255);
+	speed = DISPLACEMENT_PER_SECOND;
 }
 
 /** Sets the signals so the wheels stop turning. */
 void stop() {
-	wheels(STOP_SIGNAL, STOP_SIGNAL);
-}
-
-/** Sets the signals so the wheels make the robot turn.
- * If the signal given is positive the direction is clockwise. */
-void turn(int cw) {
-	wheels(cw, -cw);
+	wheels(0, 0);
+	speed = 0.0;
 }
 
 /** Stores the current temperature to the SD card. */
@@ -262,12 +257,15 @@ void storeTemperature() {
 #ifdef LOGGING
 	// Open the output file.
 	if (!(currentFile = SD.open("output.txt", FILE_WRITE))) {
-		Serial.println("Failed to open the output file!");
+		PRINTLN("Failed to open the output file!");
 		// Set the state to DONE if the file could not be opened.
 		error();
 		return;
 	}
 	// Write the temperature.
+	currentFile.print("Row: ");
+	currentFile.println(row);
+	currentFile.print("Position: ")
 	currentFile.println(temperature());
 	// Close the file.
 	currentFile.close();
@@ -277,48 +275,25 @@ void storeTemperature() {
 // L O G I C
 // ~~~~~~~~~
 
-/** Makes sure the given angle is between 0 and 2Pi. */
-float zeroTo2Pi(float a) {
-	float result = a;
-	while (result < 0.0)
-		result += 360.0;
-	while (result >= 360.0)
-		result -= 360.0;
-	return result;
-}
-
-/** Returns the absolute value of the given float. */
-float absolute(float a) {
-	return a < 0.0 ? -a : a;
-}
-
-/** Signals for forward movement and records the displacement.
- * The direction of movement is ignored. */
-void forwardMovement() {
-	// Move by a tick.
-	forward();
-	float d = DISPLACEMENT_PER_SECOND * elapsedTime;
-	// Record the displacement.
-	displacement += d;
-	sinceMeasurement += d;
+void prepareForTurn() {
+	position = 0.0;
+	aimedYaw = yaw + (turnsCCW < 0 ? 90.0 : -90.0);
 }
 
 /** Updates the vertical state. */
 void verticalStateUpdate() {
-	forwardMovement();
+	// Move by a tick.
+	forward();
 	// Check for the end of the row.
-	Serial.println("-----------Disp:");
-	Serial.println(displacement);
-	Serial.println(sinceMeasurement);
-	if (displacement >= rowLength) {
-		Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		Serial.print("End of the row ");
-		Serial.println(row + 1);
-		Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+	if (position >= rowLength) {
+		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		PRINT("End of the row ");
+		PRINTLN(row);
+		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		// Change the state to rotation.
 		state = STATE_ANGULAR;
 		// Revert the turning direction.
-		turnsCW = -turnsCW;
+		turnsCCW = !turnsCCW;
 		// If the previous row was the last one.
 		if (++row == rowCount) {
 			// Change the state to done.
@@ -327,68 +302,56 @@ void verticalStateUpdate() {
 		}
 		// Prepare for the rotation state.
 		aimedState = STATE_HORIZONTAL;
-		angle = yaw;
-		Serial.print("Angle: ");
-		Serial.print(angle);
-		displacement = 0.0;
+		prepareForTurn();
 	// Check for the measurement spot.
-	} else if (sinceMeasurement >= stepSize) {
-		stop();
+	} else if (position - dataPoint * stepSize < 0) {
 		// Store the temperature.
 		storeTemperature();
-		// Reset the displacement since the last measurement.
-		sinceMeasurement = 0.0;
+		dataPoint++;
 	}
 }
 
 /** Updates the horizontal state. */
 void horizontalStateUpdate() {
-	forwardMovement();
+	// Move by a tick.
+	forward();
 	// Check for the start of the row.
-	if (displacement >= rowWidth) {
-		Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		Serial.print("End of changing row ");
-		Serial.println(row);
-		Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+	if (position >= rowWidth) {
+		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		PRINT("Start of the row: ");
+		PRINTLN(row);
+		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		// Change the state to rotation.
 		state = STATE_ANGULAR;
 		// Prepare for the rotation state.
 		aimedState = STATE_VERTICAL;
-		angle = yaw;
-		Serial.print("Angle: ");
-		Serial.print(angle);
-		displacement = 0.0;
-		sinceMeasurement = 0.0;
+		dataPoint = 0;
+		prepareForTurn();
 	}
 }
 
 /** Updates the angular state. */
 void angularStateUpdate() {
 	// Turn by a tick.
-	turn(turnsCW);
-	Serial.print("Yaw: ");
-	Serial.print(yaw);
-	float difference = absolute(angle - yaw);
-	Serial.print("Difference: ");
-	Serial.println(difference);
-	Serial.println("______________________");
-	// If the robot turned a right angle.
-	if (difference >= 90.0)
+	int turnSignal = map(angle, -90, 90, -255, 255);
+	wheels(-turnSignal, turnSignal);
+	// If the robot completed the turn.
+	if (!turnSignal)
 		// Change to the next state.
 		state = aimedState;
 }
 
 /** Changes the state to ERROR and signals the wheels to stop. */
 void error() {
+	PRINTLN("An error occured!");
 	state = STATE_ERROR;
-	// Prepare for blinking.
-	blink = HIGH;
 	// Stop the wheels.
 	stop();
 }
 
 /** Changes the state to DONE and signals the wheels to stop. */
 void itIsDone() {
+	PRINTLN("Done!");
 	state = STATE_DONE;
 	// Stop the wheels.
 	stop();
@@ -397,7 +360,15 @@ void itIsDone() {
 /** Updates the state of the robot. */
 void loop() {
 	unsigned long timer = millis();
-	gyroUpdate();
+#ifdef MOVEMENT
+	// Read normalized values
+	Vector norm = mpu.readNormalizeGyro();
+	// Calculate Pitch, Roll and Yaw
+	yaw = yaw + norm.ZAxis * elapsedTime / 1000.0;
+	angle = aimedYaw - yaw;
+	// Record the displacement.
+	position += speed * elapsedTime;
+#endif
 	// Break up the logic into different functions to increase readability.
 	switch (state) {
 	case STATE_VERTICAL:
@@ -411,11 +382,8 @@ void loop() {
 		break;
 	case STATE_ERROR:
 		// Blink the on-board LED.
-		digitalWrite(LED_BUILTIN, blink);
-		if (blink == HIGH)
-			blink = LOW;
-		else
-			blink = HIGH;
+		digitalWrite(LED_BUILTIN, blink = !blink);
+		delay(100);
 		break;
 	case STATE_DONE:
 		break;
