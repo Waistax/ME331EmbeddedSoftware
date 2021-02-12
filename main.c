@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.40
+ * Version: 1.41
  *
  * Created on 28.1.2021, 21:44
  */
@@ -60,6 +60,9 @@
 #define PIN_DRIVER_BPWM 3
 // Temperature Sensor
 #define PIN_TEMPERATURE_SENSOR A0
+// Information LEDs
+#define PIN_GREEN_LED 8
+#define PIN_RED_LED 9
 
 // F I E L D S
 // ~~~~~~~~~~~
@@ -130,33 +133,49 @@ float temperature() {
 
 /** Writes an int to the currently open file. */
 void writeInt(int a) {
-	unsigned int asInt = *((unsigned int*) &a);
-	// Shift the int's bytes to the file.
-	for (int i = 0; i < 4; i++)
-		currentFile.write((asInt >> 8 * a) & 0xFF);
+	union intConverter {
+		int value;
+		uint8_t bytes[4];
+	} converter;
+	// Convert it to a byte array.
+	converter.value = a;
+	// Write the byte array.
+	currentFile.write(converter.bytes, 4);
 }
 
 /** Writes a float to the currently open file. */
 void writeFloat(float f) {
-	// Convert the float to an int.
-	writeInt(*((int*) &f));
+	union floatConverter {
+		float value;
+		uint8_t bytes[4];
+	} converter;
+	// Convert it to a byte array.
+	converter.value = f;
+	// Write the byte array.
+	currentFile.write(converted.bytes, 4);
 }
 
 int readInt() {
-	// Create an empty int.
-	unsigned int asInt = 0;
-	// Shift the read bytes to the int.
-	for (int i = 3; i >= 0; i--)
-		asInt |= (currentFile.read() & 0xFF) << (8 * i);
-	return *((int*) &asInt);
+	union intConverter {
+		int value;
+		uint8_t bytes[4];
+	} converter;
+	// Read the bytes.
+	currentFile.read(converter.bytes, 4);
+	// Convert it to an int.
+	return converter.value;
 }
 
 /** Reads a float from the currently open file. */
 float readFloat() {
-	// Create an empty int.
-	int asInt = readInt();
-	// Convert the int to a float.
-	return *((float*) &asInt);
+	union floatConverter {
+		float value;
+		uint8_t bytes[4];
+	} converter;
+	// Read the bytes.
+	currentFile.read(converter.bytes, 4);
+	// Convert it to a float.
+	return converter.value;
 }
 
 /** Loads the necessary pins. */
@@ -175,6 +194,8 @@ void setup() {
 	pinMode(PIN_DRIVER_BIN1, OUTPUT);
 	pinMode(PIN_DRIVER_BIN2, OUTPUT);
 	pinMode(PIN_DRIVER_BPWM, OUTPUT);
+	pinMode(PIN_GREEN_LED, OUTPUT);
+	pinMode(PIN_RED_LED, OUTPUT);
 	// Initialize gyro
 	if (!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G)) {
 		error();
@@ -378,9 +399,11 @@ void verticalStateUpdate() {
 		prepareForTurn();
 		// Check for the measurement spot.
 	} else if (position - dataPoint * stepSize > 0) {
+		digitalWrite(PIN_GREEN_LED, HIGH);
 		// Store the temperature.
 		storeTemperature();
 		dataPoint++;
+		digitalWrite(PIN_GREEN_LED, LOW);
 	}
 }
 
@@ -489,6 +512,7 @@ void loop() {
 	case STATE_ERROR:
 		// Blink the on-board LED.
 		digitalWrite(LED_BUILTIN, blink = blink ? 0 : 1);
+		digitalWrite(PIN_RED_LED, blink);
 		delay(100);
 		break;
 	case STATE_DONE:
