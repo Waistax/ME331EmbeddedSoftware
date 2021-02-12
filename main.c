@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.42
+ * Version: 1.43
  *
  * Created on 28.1.2021, 21:44
  */
@@ -133,9 +133,9 @@ float temperature() {
 
 /** Writes an int to the currently open file. */
 void writeInt(int a) {
-	union intConverter {
+	union {
 		int value;
-		uint8_t bytes[4];
+		unsigned char bytes[4];
 	} converter;
 	// Convert it to a byte array.
 	converter.value = a;
@@ -145,9 +145,9 @@ void writeInt(int a) {
 
 /** Writes a float to the currently open file. */
 void writeFloat(float f) {
-	union floatConverter {
+	union {
 		float value;
-		uint8_t bytes[4];
+		unsigned char bytes[4];
 	} converter;
 	// Convert it to a byte array.
 	converter.value = f;
@@ -156,9 +156,9 @@ void writeFloat(float f) {
 }
 
 int readInt() {
-	union intConverter {
+	union {
 		int value;
-		uint8_t bytes[4];
+		unsigned char bytes[4];
 	} converter;
 	// Read the bytes.
 	currentFile.read(converter.bytes, 4);
@@ -168,9 +168,9 @@ int readInt() {
 
 /** Reads a float from the currently open file. */
 float readFloat() {
-	union floatConverter {
+	union {
 		float value;
-		uint8_t bytes[4];
+		unsigned char bytes[4];
 	} converter;
 	// Read the bytes.
 	currentFile.read(converter.bytes, 4);
