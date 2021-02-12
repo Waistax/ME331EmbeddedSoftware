@@ -255,7 +255,7 @@ void setup() {
 	writeInt(4);
 	unsigned char a = 0;
 	currentFile.write(a);
-	currentFile(27)
+	currentFile(27);
 	currentFile.close();
 #endif
 #ifdef LOGGING
