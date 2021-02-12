@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.36
+ * Version: 1.37
  *
  * Created on 28.1.2021, 21:44
  */
@@ -245,7 +245,7 @@ void setup() {
 void forward() {
 	wheels(255, 255);
 	speed = DISPLACEMENT_PER_SECOND;
-	float tol = 0.0; //Tolerance value in degrees. (Calibrated by trial an error starting from 1.00 and trying variations between 0.00, 0.00 shaky, 1.00 error too high.)
+	float tol = 0.01; //Tolerance value in degrees. (Calibrated by trial an error starting from 1.00 and trying variations between 0.00, 0.00 shaky, 1.00 error too high.)
 	if (yaw >= -10 && yaw <= 10) { //VERTICAL
 		if (yaw >= -tol && yaw <= tol)
 			wheels(255, 255);
@@ -267,6 +267,7 @@ void forward() {
 			wheels(255, 255 * (-200 * yaw / 90 - 300));
 		else if (yaw < -180 - tol)
 			wheels(255 * (200 * yaw / 90 + 500), 255);
+		speed *= 0.26;
 	}
 }
 
