@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.43
+ * Version: 1.44
  *
  * Created on 28.1.2021, 21:44
  */
@@ -131,53 +131,6 @@ float temperature() {
 #endif
 }
 
-/** Writes an int to the currently open file. */
-void writeInt(int a) {
-	union {
-		int value;
-		unsigned char bytes[4];
-	} converter;
-	// Convert it to a byte array.
-	converter.value = a;
-	// Write the byte array.
-	currentFile.write(converter.bytes, 4);
-}
-
-/** Writes a float to the currently open file. */
-void writeFloat(float f) {
-	union {
-		float value;
-		unsigned char bytes[4];
-	} converter;
-	// Convert it to a byte array.
-	converter.value = f;
-	// Write the byte array.
-	currentFile.write(converter.bytes, 4);
-}
-
-int readInt() {
-	union {
-		int value;
-		unsigned char bytes[4];
-	} converter;
-	// Read the bytes.
-	currentFile.read(converter.bytes, 4);
-	// Convert it to an int.
-	return converter.value;
-}
-
-/** Reads a float from the currently open file. */
-float readFloat() {
-	union {
-		float value;
-		unsigned char bytes[4];
-	} converter;
-	// Read the bytes.
-	currentFile.read(converter.bytes, 4);
-	// Convert it to a float.
-	return converter.value;
-}
-
 /** Loads the necessary pins. */
 void setup() {
 #ifdef SERIAL
@@ -228,38 +181,30 @@ void setup() {
 #ifdef READING
 	PRINTLN("Reading active.");
 	// If there is not enough data given.
-	if (!(currentFile = SD.open("input.bin"))) {
+	if (!(currentFile = SD.open("input.txt"))) {
 		PRINTLN("Failed to open the input.bin file!");
 		// Set the state to DONE.
 		error();
 		return;
 	}
-	if (currentFile.available() != 17) {
-		PRINTLN("The input.bin file is not 17 bytes long!");
-		// Set the state to DONE.
-		error();
-		return;
-	}
-	// Read the input bytes.
-	rowLength = readFloat();
-	stepSize = readFloat();
-	rowWidth = readFloat();
-	rowCount = readInt();
-	turnsCCW = currentFile.read();
+	String buffer;
+	// Read the input data as string.
+	buffer = currentFile.readStringUntil('\n');
+	rowLength = buffer.toFloat();
+	buffer = currentFile.readStringUntil('\n');
+	stepSize = buffer.toFloat();
+	buffer = currentFile.readStringUntil('\n');
+	rowWidth = buffer.toFloat();
+	buffer = currentFile.readStringUntil('\n');
+	rowCount = buffer.toInt();
+	buffer = currentFile.readStringUntil('\n');
+	turnsCCW = buffer.toInt() ? 1 : 0;
 	// Close the file.
-	currentFile.close();
-	currentFile = SD.open("testread.bin", FILE_WRITE);
-	writeFloat(1.0);
-	writeFloat(0.03);
-	writeFloat(0.2);
-	writeInt(4);
-	unsigned char a = 0;
-	currentFile.write(a);
 	currentFile.close();
 #endif
 #ifdef LOGGING
 	// Open the output file.
-	if (!(currentFile = SD.open("output.txt", FILE_WRITE))) {
+	if (!(currentFile = SD.open("output.txt", O_WRITE | O_CREATE))) {
 		PRINTLN("Failed to open the output file!");
 		// Set the state to DONE if the file could not be opened.
 		error();
@@ -274,7 +219,7 @@ void setup() {
 	currentFile.println(rowWidth);
 	currentFile.print("Row Count: ");
 	currentFile.println(rowCount);
-	currentFile.print("Initial Turn CCW: ");
+	currentFile.print("Initial Turn CW: ");
 	currentFile.println(turnsCCW);
 	// Close the file.
 	currentFile.close();
