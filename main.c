@@ -265,7 +265,7 @@ void storeTemperature() {
 	// Write the temperature.
 	currentFile.print("Row: ");
 	currentFile.println(row);
-	currentFile.print("Position: ")
+	currentFile.print("Position: ");
 	currentFile.println(temperature());
 	// Close the file.
 	currentFile.close();
