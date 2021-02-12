@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.28
+ * Version: 1.29
  *
  * Created on 28.1.2021, 21:44
  */
@@ -40,7 +40,7 @@
 
 // Serial
 #define ANALOG_TO_CELSIUS 0.48828125
-#define TURN_SIGNAL_LOWER_BOUND 155
+#define TURN_SIGNAL_LOWER_BOUND 200
 
 // Logical
 #define STATE_VERTICAL 0
@@ -290,11 +290,15 @@ void verticalStateUpdate() {
 		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		PRINT("End of the row ");
 		PRINTLN(row);
-		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		// Change the state to rotation.
 		state = STATE_ANGULAR;
 		// Revert the turning direction.
+		PRINT("Change turnsCCW from: ");
+		PRINT(turnsCCW);
 		turnsCCW != turnsCCW;
+		PRINT(" to: ");
+		PRINTLN(turnsCCW);
+		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 		// If the previous row was the last one.
 		if (++row == rowCount) {
 			// Change the state to done.
@@ -310,6 +314,16 @@ void verticalStateUpdate() {
 		storeTemperature();
 		dataPoint++;
 	}
+	PRINT("Aimed Yaw:");
+	PRINT(aimedYaw);
+	PRINT(" Yaw:");
+	PRINT(yaw);
+	PRINT(" Angle:");
+	PRINT(angle);
+	PRINT(" Position:");
+	PRINT(position);
+	PRINT(" Data Point:");
+	PRINT(dataPoint);
 }
 
 /** Updates the horizontal state. */
@@ -329,6 +343,14 @@ void horizontalStateUpdate() {
 		dataPoint = 0;
 		prepareForTurn();
 	}
+	PRINT("Aimed Yaw:");
+	PRINT(aimedYaw);
+	PRINT(" Yaw:");
+	PRINT(yaw);
+	PRINT(" Angle:");
+	PRINT(angle);
+	PRINT(" Position:");
+	PRINTLN(position);
 }
 
 /** Updates the angular state. */
@@ -338,15 +360,25 @@ void angularStateUpdate() {
 	if (angle > 0.0) {
 		turnSignal = map(sqrt(angle), 0, sqrt(90), TURN_SIGNAL_LOWER_BOUND, 255);
 		// If the robot completed the turn.
-		if (turnSignal == TURN_SIGNAL_LOWER_BOUND)
+		if (turnSignal == TURN_SIGNAL_LOWER_BOUND) {
 			// Change to the next state.
 			state = aimedState;
+			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+			PRINT("End of the turn CCW: ");
+			PRINT(turnsCCW);
+			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");			
+		}
 	} else {
 		turnSignal = map(sqrt(-angle), 0, sqrt(90), -TURN_SIGNAL_LOWER_BOUND, -255);
 		// If the robot completed the turn.
-		if (turnSignal == -TURN_SIGNAL_LOWER_BOUND)
+		if (turnSignal == -TURN_SIGNAL_LOWER_BOUND) {
 			// Change to the next state.
 			state = aimedState;
+			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+			PRINT("End of the turn CCW: ");
+			PRINT(turnsCCW);
+			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");					
+		}
 	}
 	wheels(-turnSignal, turnSignal);
 	PRINT("Aimed Yaw:");
