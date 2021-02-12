@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.29
+ * Version: 1.30
  *
  * Created on 28.1.2021, 21:44
  */
@@ -295,7 +295,7 @@ void verticalStateUpdate() {
 		// Revert the turning direction.
 		PRINT("Change turnsCCW from: ");
 		PRINT(turnsCCW);
-		turnsCCW != turnsCCW;
+		turnsCCW = turnsCCW ? 0 : 1;
 		PRINT(" to: ");
 		PRINTLN(turnsCCW);
 		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -323,7 +323,7 @@ void verticalStateUpdate() {
 	PRINT(" Position:");
 	PRINT(position);
 	PRINT(" Data Point:");
-	PRINT(dataPoint);
+	PRINTLN(dataPoint);
 }
 
 /** Updates the horizontal state. */
@@ -365,7 +365,7 @@ void angularStateUpdate() {
 			state = aimedState;
 			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			PRINT("End of the turn CCW: ");
-			PRINT(turnsCCW);
+			PRINTLN(turnsCCW);
 			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");			
 		}
 	} else {
@@ -376,7 +376,7 @@ void angularStateUpdate() {
 			state = aimedState;
 			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			PRINT("End of the turn CCW: ");
-			PRINT(turnsCCW);
+			PRINTLN(turnsCCW);
 			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");					
 		}
 	}
@@ -432,7 +432,7 @@ void loop() {
 		break;
 	case STATE_ERROR:
 		// Blink the on-board LED.
-		digitalWrite(LED_BUILTIN, blink != blink);
+		digitalWrite(LED_BUILTIN, blink = blink ? 0 : 1);
 		delay(100);
 		break;
 	case STATE_DONE:
