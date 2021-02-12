@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.37
+ * Version: 1.38
  *
  * Created on 28.1.2021, 21:44
  */
@@ -156,7 +156,7 @@ void setup() {
 	// Set the initial state.
 	state = STATE_VERTICAL;
 	// Default
-	rowLength = 0.5;
+	rowLength = 1.0;
 	stepSize = 0.1;
 	rowWidth = 0.1;
 	rowCount = 3;
@@ -267,7 +267,7 @@ void forward() {
 			wheels(255, 255 * (-200 * yaw / 90 - 300));
 		else if (yaw < -180 - tol)
 			wheels(255 * (200 * yaw / 90 + 500), 255);
-		speed *= 0.26;
+		speed *= 0.74;
 	}
 }
 
