@@ -333,14 +333,15 @@ void horizontalStateUpdate() {
 /** Updates the angular state. */
 void angularStateUpdate() {
 	// Turn by a tick.
+	int turnSignal = 0;
 	if (angle > 0.0) {
-		int turnSignal = map(angle, 0, 90, 100, 255);
+		turnSignal = map(angle, 0, 90, 100, 255);
 		// If the robot completed the turn.
 		if (turnSignal == 100)
 			// Change to the next state.
 			state = aimedState;
 	} else {
-		int turnSignal = map(angle, 0, -90, -100, -255);
+		turnSignal = map(angle, 0, -90, -100, -255);
 		// If the robot completed the turn.
 		if (turnSignal == -100)
 			// Change to the next state.
