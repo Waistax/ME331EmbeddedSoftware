@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.21
+ * Version: 1.22
  *
  * Created on 28.1.2021, 21:44
  */
@@ -334,6 +334,10 @@ void horizontalStateUpdate() {
 void angularStateUpdate() {
 	// Turn by a tick.
 	int turnSignal = map(angle, -90, 90, -255, 255);
+	PRINT("Angle:");
+	PRINT(angle);
+	PRINT("Signal:");
+	PRINTLN(turnSignal);
 	wheels(-turnSignal, turnSignal);
 	// If the robot completed the turn.
 	if (!turnSignal)
