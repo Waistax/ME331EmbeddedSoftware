@@ -1,14 +1,14 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.44
+ * Version: 1.45
  *
  * Created on 28.1.2021, 21:44
  */
 
-#define READING
+//#define READING
 #define LOGGING
-//#define MOVEMENT
+#define MOVEMENT
 #define SERIAL
 
 // Serial
@@ -39,8 +39,8 @@
 #define DELAY_AFTER_SETUP 10
 
 // Serial
-#define ANALOG_TO_CELSIUS 0.48828125
-#define ANGLE_UPPER_BOUND 0.01
+#define ANALOG_TO_CELSIUS 500.0/1023.0
+#define ANGLE_THRESHOLD 0.01
 
 // Logical
 #define STATE_VERTICAL 0
@@ -165,7 +165,7 @@ void setup() {
 	stepSize = 0.1;
 	rowWidth = 0.1;
 	rowCount = 3;
-	turnsCCW = 1;
+	turnsCCW = 0;
 #ifdef LOGGING
 	PRINTLN("Logging active.");
 	// Set up the SD card.
@@ -297,6 +297,8 @@ void storeTemperature() {
 	currentFile.print(row);
 	currentFile.print(" | Position: ");
 	currentFile.print(position);
+	currentFile.print(" | Data Point: ");
+	currentFile.print(dataPoint);
 	currentFile.print(" | Temperature: ");
 	currentFile.println(temperature());
 	// Close the file.
@@ -351,8 +353,9 @@ void verticalStateUpdate() {
 		aimedState = STATE_HORIZONTAL;
 		prepareForTurn();
 		// Check for the measurement spot.
-	} else if (position - dataPoint * stepSize > 0) {
+	} else if (position - dataPoint * stepSize > 0.0) {
 		digitalWrite(PIN_GREEN_LED, HIGH);
+		stop();
 		// Store the temperature.
 		storeTemperature();
 		dataPoint++;
@@ -390,37 +393,23 @@ void horizontalStateUpdate() {
 /** Updates the angular state. */
 void angularStateUpdate() {
 	// Turn by a tick.
-	if (angle > 0.0) {
-		wheels(-255, 255);
-		// If the robot completed the turn.
-		if (angle <= ANGLE_UPPER_BOUND) {
-			// Change to the next state.
-			state = aimedState;
-			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			PRINT("End of the turn CCW: ");
-			PRINTLN(turnsCCW);
-			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		}
-	} else {
-		wheels(255, -255);
-		// If the robot completed the turn.
-		if (-angle <= ANGLE_UPPER_BOUND) {
-			// Change to the next state.
-			state = aimedState;
-			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			PRINT("End of the turn CCW: ");
-			PRINTLN(turnsCCW);
-			PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-		}
+	int turnSignalCCW = angle > 0.0 ? 255 : -255;
+	wheels(-turnSignalCCW, turnSignalCCW);
+	// If the robot completed the turn.
+	if (abs(angle) <= ANGLE_THRESHOLD) {
+		// Change to the next state.
+		state = aimedState;
+		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+		PRINT("End of the turn CCW: ");
+		PRINTLN(turnsCCW);
+		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 	}
-
 	PRINT("Aimed Yaw:");
 	PRINT(aimedYaw);
 	PRINT(" Yaw:");
 	PRINT(yaw);
 	PRINT(" Angle:");
 	PRINTLN(angle);
-
 }
 
 /** Changes the state to ERROR and signals the wheels to stop. */
