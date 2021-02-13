@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.45
+ * Version: 1.46
  *
  * Created on 28.1.2021, 21:44
  */
@@ -250,30 +250,6 @@ void setup() {
 void forward() {
 	wheels(255, 255);
 	speed = DISPLACEMENT_PER_SECOND;
-	float tol = 0.01; //Tolerance value in degrees. (Calibrated by trial an error starting from 1.00 and trying variations between 0.00, 0.00 shaky, 1.00 error too high.)
-	if (yaw >= -10 && yaw <= 10) { //VERTICAL
-		if (yaw >= -tol && yaw <= tol)
-			wheels(255, 255);
-		else if (yaw > tol)
-			wheels(255, 255 * (200 * yaw / 90 + 100));
-		else if (yaw < -tol)
-			wheels(255 * (-200 * yaw / 90 + 100), 255);
-	} else if (yaw >= -100 && yaw <= -80) { //HORIZONTAL
-		if (yaw >= -90 - tol && yaw <= -90 + tol)
-			wheels(255, 255);
-		else if (yaw > -90 + tol)
-			wheels(255, 255 * (-200 * yaw / 90 - 100));
-		else if (yaw < -90 - tol)
-			wheels(255 * (200 * yaw / 90 + 300), 255);
-	} else if (yaw >= -190 && yaw <= -170) {  //VERTICAL BACK
-		if (yaw >= -180 - tol && yaw <= -180 + tol)
-			wheels(255, 255);
-		else if (yaw > -180 + tol)
-			wheels(255, 255 * (-200 * yaw / 90 - 300));
-		else if (yaw < -180 - tol)
-			wheels(255 * (200 * yaw / 90 + 500), 255);
-		speed *= 0.74;
-	}
 }
 
 /** Sets the signals so the wheels stop turning. */
@@ -329,6 +305,13 @@ void verticalStateUpdate() {
 	PRINT(position);
 	PRINT(" Data Point:");
 	PRINTLN(dataPoint);
+	if (abs(angle) > ANGLE_THRESHOLD) {
+		PRINT("Deviated from the path by: ");
+		PRINTLN(angle);
+		state = STATE_ANGULAR;
+		aimedState = STATE_VERTICAL;
+		speed = 0.0;
+	}
 	// Check for the end of the row.
 	if (position >= rowLength) {
 		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -375,6 +358,13 @@ void horizontalStateUpdate() {
 	PRINT(angle);
 	PRINT(" Position:");
 	PRINTLN(position);
+	if (abs(angle) > ANGLE_THRESHOLD) {
+		PRINT("Deviated from the path by: ");
+		PRINTLN(angle);
+		state = STATE_ANGULAR;
+		aimedState = STATE_HORIZONTAL;
+		speed = 0.0;
+	}
 	// Check for the start of the row.
 	if (position >= rowWidth) {
 		PRINTLN("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
