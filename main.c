@@ -1,7 +1,7 @@
 /*
  * ME331 FALL2020 Term Project Group 7
  * Author: Cem
- * Version: 1.46
+ * Version: 1.47
  *
  * Created on 28.1.2021, 21:44
  */
@@ -41,6 +41,7 @@
 // Serial
 #define ANALOG_TO_CELSIUS 500.0/1023.0
 #define ANGLE_THRESHOLD 0.01
+#define FORWARD_ANGLE_THRESHOLD 0.1
 
 // Logical
 #define STATE_VERTICAL 0
@@ -305,7 +306,7 @@ void verticalStateUpdate() {
 	PRINT(position);
 	PRINT(" Data Point:");
 	PRINTLN(dataPoint);
-	if (abs(angle) > ANGLE_THRESHOLD) {
+	if (abs(angle) > FORWARD_ANGLE_THRESHOLD) {
 		PRINT("Deviated from the path by: ");
 		PRINTLN(angle);
 		state = STATE_ANGULAR;
@@ -358,7 +359,7 @@ void horizontalStateUpdate() {
 	PRINT(angle);
 	PRINT(" Position:");
 	PRINTLN(position);
-	if (abs(angle) > ANGLE_THRESHOLD) {
+	if (abs(angle) > FORWARD_ANGLE_THRESHOLD) {
 		PRINT("Deviated from the path by: ");
 		PRINTLN(angle);
 		state = STATE_ANGULAR;
